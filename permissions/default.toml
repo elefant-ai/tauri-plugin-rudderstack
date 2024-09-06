@@ -1,0 +1,20 @@
+"$schema" = "schemas/schema.json"
+
+[default]
+description = """
+This permission set configures what kind of
+operations are available from the rudderstack plugin.
+
+#### Granted Permissions
+
+All operations are enabled by default.
+
+"""
+permissions = [
+    "allow-send-analytics-alias",
+    "allow-send-analytics-group",
+    "allow-send-analytics-identify",
+    "allow-send-analytics-page",
+    "allow-send-analytics-screen",
+    "allow-send-analytics-track",
+]

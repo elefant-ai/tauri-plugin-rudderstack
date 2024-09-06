@@ -1,0 +1,32 @@
+[package]
+name = "tauri-plugin-rudderstack"
+version = "0.1.0"
+description = "Rudderstack plugin for Tauri"
+exclude = ["/examples", "/webview-dist", "/webview-src", "/node_modules"]
+links = "tauri-plugin-rudderstack"
+authors = ["elefant ai", "Night-Hunter"]
+edition = "2021"
+
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+specta = { version = "2.0.0-rc.20", features = ["bigdecimal", "serde_json", "chrono"] }
+tauri-specta = { git = "https://github.com/elefant-ai/tauri-specta.git", rev = "66a84bb", features = [
+    "derive",
+    "typescript",
+] }
+tauri = { version = "2.0.0-rc.10", features = ["wry"] }
+thiserror = "1"
+serde_json = "1"
+tracing = "0.1.40"
+uuid = { version = "1.10.0", features = ["v4"] }
+specta-typescript = { version = "0.0.7", optional = true}
+rudderanalytics = "1.1.4"
+chrono = "0.4.38"
+
+[features]
+default = []
+build-types = ["specta-typescript"]
+
+[build-dependencies]
+tauri-plugin = { version = "2.0.0-rc.9", features = ["build"] }
