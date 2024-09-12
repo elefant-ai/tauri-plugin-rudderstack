@@ -5,6 +5,7 @@ use rudderanalytics::client::RudderAnalytics;
 pub struct RudderWrapper {
     rudder: Arc<RudderAnalytics>,
     anonymous_id: Mutex<String>,
+    user_id: Mutex<Option<String>>,
 }
 
 impl RudderWrapper {
@@ -14,6 +15,7 @@ impl RudderWrapper {
         Self {
             rudder,
             anonymous_id: Mutex::new(anonymous_id),
+            user_id: Mutex::new(None),
         }
     }
 
@@ -29,6 +31,13 @@ impl RudderWrapper {
         *self.anonymous_id.lock().unwrap() = anonymous_id;
     }
 
+    /// Set the user id for this client
+    /// This will be used in all subsequent events
+    /// it will overwrite the previous user id 
+    pub(crate) fn set_user_id(&self, user_id: Option<String>) {
+        *self.user_id.lock().unwrap() = user_id;
+    }
+
     /// Function that will receive user event data
     /// and after validation
     /// modify it to Ruddermessage format and send the event to data plane url \
@@ -42,10 +51,15 @@ impl RudderWrapper {
             let id = self.anonymous_id.lock().unwrap();
             id.clone()
         };
+        let user_id = {
+            let id = self.user_id.lock().unwrap();
+            id.clone()
+        };
         let msg = match msg {
             rudderanalytics::message::Message::Identify(identify) => {
                 rudderanalytics::message::Message::Identify(rudderanalytics::message::Identify {
                     anonymous_id: Some(anonymous_id),
+                    user_id,
                     ..identify
                 })
             }
@@ -55,24 +69,28 @@ impl RudderWrapper {
             rudderanalytics::message::Message::Group(group) => {
                 rudderanalytics::message::Message::Group(rudderanalytics::message::Group {
                     anonymous_id: Some(anonymous_id),
+                    user_id,
                     ..group
                 })
             }
             rudderanalytics::message::Message::Page(page) => {
                 rudderanalytics::message::Message::Page(rudderanalytics::message::Page {
                     anonymous_id: Some(anonymous_id),
+                    user_id,
                     ..page
                 })
             }
             rudderanalytics::message::Message::Screen(screen) => {
                 rudderanalytics::message::Message::Screen(rudderanalytics::message::Screen {
                     anonymous_id: Some(anonymous_id),
+                    user_id,
                     ..screen
                 })
             }
             rudderanalytics::message::Message::Track(track) => {
                 rudderanalytics::message::Message::Track(rudderanalytics::message::Track {
                     anonymous_id: Some(anonymous_id),
+                    user_id,
                     ..track
                 })
             }
@@ -81,7 +99,7 @@ impl RudderWrapper {
                     batch: batch
                         .batch
                         .into_iter()
-                        .map(|msg| handle_batch_message(msg, anonymous_id.clone()))
+                        .map(|msg| handle_batch_message(msg, anonymous_id.clone(),user_id.clone()))
                         .collect(),
                     ..batch
                 })
@@ -96,11 +114,13 @@ impl RudderWrapper {
 fn handle_batch_message(
     batch_message: rudderanalytics::message::BatchMessage,
     anonymous_id: String,
+    user_id: Option<String>,
 ) -> rudderanalytics::message::BatchMessage {
     match batch_message {
         rudderanalytics::message::BatchMessage::Identify(identify) => {
             let identify = rudderanalytics::message::Identify {
                 anonymous_id: Some(anonymous_id),
+                user_id,
                 ..identify
             };
             rudderanalytics::message::BatchMessage::Identify(identify)
@@ -111,6 +131,7 @@ fn handle_batch_message(
         rudderanalytics::message::BatchMessage::Group(group) => {
             let group = rudderanalytics::message::Group {
                 anonymous_id: Some(anonymous_id),
+                user_id,
                 ..group
             };
             rudderanalytics::message::BatchMessage::Group(group)
@@ -118,6 +139,7 @@ fn handle_batch_message(
         rudderanalytics::message::BatchMessage::Page(page) => {
             let page = rudderanalytics::message::Page {
                 anonymous_id: Some(anonymous_id),
+                user_id,
                 ..page
             };
             rudderanalytics::message::BatchMessage::Page(page)
@@ -125,6 +147,7 @@ fn handle_batch_message(
         rudderanalytics::message::BatchMessage::Screen(screen) => {
             let screen = rudderanalytics::message::Screen {
                 anonymous_id: Some(anonymous_id),
+                user_id,
                 ..screen
             };
             rudderanalytics::message::BatchMessage::Screen(screen)
@@ -132,6 +155,7 @@ fn handle_batch_message(
         rudderanalytics::message::BatchMessage::Track(track) => {
             let track = rudderanalytics::message::Track {
                 anonymous_id: Some(anonymous_id),
+                user_id,
                 ..track
             };
             rudderanalytics::message::BatchMessage::Track(track)

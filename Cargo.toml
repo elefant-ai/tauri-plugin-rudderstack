@@ -1,6 +1,6 @@
 [package]
 name = "tauri-plugin-rudderstack"
-version = "0.1.0"
+version = "0.2.0"
 description = "Rudderstack plugin for Tauri"
 exclude = ["/examples", "/webview-dist", "/webview-src", "/node_modules"]
 links = "tauri-plugin-rudderstack"

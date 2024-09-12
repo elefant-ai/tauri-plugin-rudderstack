@@ -21,9 +21,6 @@ pub enum Message {
 /// The identify call lets you identify a visiting user and associate them to their actions. It also lets you record the traits about them like their name, email address, etc.
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize, Default, specta::Type)]
 pub struct Identify {
-    /// The user id associated with this message.
-    #[serde(rename = "userId", skip_serializing_if = "Option::is_none")]
-    pub user_id: Option<String>,
 
     /// The traits to assign to the user.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -46,9 +43,6 @@ pub struct Identify {
 /// The track call lets you record the user actions along with their associated properties. Each user action is called an event.
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize, Default, specta::Type)]
 pub struct Track {
-    /// The user id associated with this message.
-    #[serde(rename = "userId", skip_serializing_if = "Option::is_none")]
-    pub user_id: Option<String>,
 
     /// The name of the event being tracked.
     pub event: String,
@@ -76,9 +70,6 @@ pub struct Track {
 /// RudderStack recommends calling page at least once every page load.
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize, Default, specta::Type)]
 pub struct Page {
-    /// The user id associated with this message.
-    #[serde(rename = "userId", skip_serializing_if = "Option::is_none")]
-    pub user_id: Option<String>,
 
     /// The name of the page being tracked.
     pub name: String,
@@ -108,9 +99,6 @@ pub struct Page {
 /// The screen call is the mobile equivalent of the page call.
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize, Default, specta::Type)]
 pub struct Screen {
-    /// The user id associated with this message.
-    #[serde(rename = "userId", skip_serializing_if = "Option::is_none")]
-    pub user_id: Option<String>,
 
     /// The name of the screen being tracked.
     pub name: String,
@@ -137,9 +125,6 @@ pub struct Screen {
 /// An identified user can be in more than one group.
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize, Default, specta::Type)]
 pub struct Group {
-    /// The user id associated with this message.
-    #[serde(rename = "userId", skip_serializing_if = "Option::is_none")]
-    pub user_id: Option<String>,
 
     /// The group the user is being associated with.
     #[serde(rename = "groupId")]
@@ -256,7 +241,7 @@ pub(crate) fn convert_message(message: Message) -> rudderanalytics::message::Mes
         }
         Message::Group(group) => {
             rudderanalytics::message::Message::Group(rudderanalytics::message::Group {
-                user_id: group.user_id,
+                user_id: None,
                 anonymous_id: None,
                 group_id: group.group_id,
                 traits: group.traits,
@@ -267,7 +252,7 @@ pub(crate) fn convert_message(message: Message) -> rudderanalytics::message::Mes
         }
         Message::Identify(identify) => {
             rudderanalytics::message::Message::Identify(rudderanalytics::message::Identify {
-                user_id: identify.user_id,
+                user_id: None,
                 anonymous_id: None,
                 traits: identify.traits,
                 original_timestamp: identify.original_timestamp,
@@ -277,7 +262,7 @@ pub(crate) fn convert_message(message: Message) -> rudderanalytics::message::Mes
         }
         Message::Page(page) => {
             rudderanalytics::message::Message::Page(rudderanalytics::message::Page {
-                user_id: page.user_id,
+                user_id: None,
                 anonymous_id: None,
                 name: page.name,
                 properties: page.properties,
@@ -288,7 +273,7 @@ pub(crate) fn convert_message(message: Message) -> rudderanalytics::message::Mes
         }
         Message::Screen(screen) => {
             rudderanalytics::message::Message::Screen(rudderanalytics::message::Screen {
-                user_id: screen.user_id,
+                user_id: None,
                 anonymous_id: None,
                 name: screen.name,
                 properties: screen.properties,
@@ -299,7 +284,7 @@ pub(crate) fn convert_message(message: Message) -> rudderanalytics::message::Mes
         }
         Message::Track(track) => {
             rudderanalytics::message::Message::Track(rudderanalytics::message::Track {
-                user_id: track.user_id,
+                user_id: None,
                 anonymous_id: None,
                 event: track.event,
                 properties: track.properties,
@@ -326,7 +311,7 @@ fn convert_batch_message(batch_message: BatchMessage) -> rudderanalytics::messag
         }
         BatchMessage::Group(group) => {
             rudderanalytics::message::BatchMessage::Group(rudderanalytics::message::Group {
-                user_id: group.user_id,
+                user_id: None,
                 anonymous_id: None,
                 group_id: group.group_id,
                 traits: group.traits,
@@ -337,7 +322,7 @@ fn convert_batch_message(batch_message: BatchMessage) -> rudderanalytics::messag
         }
         BatchMessage::Identify(identify) => {
             rudderanalytics::message::BatchMessage::Identify(rudderanalytics::message::Identify {
-                user_id: identify.user_id,
+                user_id: None,
                 anonymous_id: None,
                 traits: identify.traits,
                 original_timestamp: identify.original_timestamp,
@@ -347,7 +332,7 @@ fn convert_batch_message(batch_message: BatchMessage) -> rudderanalytics::messag
         }
         BatchMessage::Page(page) => {
             rudderanalytics::message::BatchMessage::Page(rudderanalytics::message::Page {
-                user_id: page.user_id,
+                user_id: None,
                 anonymous_id: None,
                 name: page.name,
                 properties: page.properties,
@@ -358,7 +343,7 @@ fn convert_batch_message(batch_message: BatchMessage) -> rudderanalytics::messag
         }
         BatchMessage::Screen(screen) => {
             rudderanalytics::message::BatchMessage::Screen(rudderanalytics::message::Screen {
-                user_id: screen.user_id,
+                user_id: None,
                 anonymous_id: None,
                 name: screen.name,
                 properties: screen.properties,
@@ -369,7 +354,7 @@ fn convert_batch_message(batch_message: BatchMessage) -> rudderanalytics::messag
         }
         BatchMessage::Track(track) => {
             rudderanalytics::message::BatchMessage::Track(rudderanalytics::message::Track {
-                user_id: track.user_id,
+                user_id: None,
                 anonymous_id: None,
                 event: track.event,
                 properties: track.properties,

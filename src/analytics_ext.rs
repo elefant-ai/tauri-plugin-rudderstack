@@ -71,6 +71,10 @@ pub trait AnalyticsExt<R: Runtime> {
     /// Set the anonymous ID of the user. This will be used in all subsequent events.
     /// It will overwrite the previous anonymous ID including the one saved in the file.
     fn set_anonymous_id(&self, id: String) -> Result<(), anonymous_id::ClientIdError>;
+
+    /// Set the user ID of the user. This will be used in all subsequent events.
+    /// It will overwrite the previous user ID.
+    fn set_user_id(&self, id: Option<String>) ;
 }
 
 impl<R: Runtime> AnalyticsExt<R> for tauri::AppHandle<R> {
@@ -90,5 +94,11 @@ impl<R: Runtime> AnalyticsExt<R> for tauri::AppHandle<R> {
         let rudder = self.state::<RudderWrapper>();
         rudder.set_anonymous_id(id.clone());
         anonymous_id::save_anonymous_id(self, id)
+    }
+
+    fn set_user_id(&self, id: Option<String>)  {
+        tracing::debug!("setting user id: {:?}", id);
+        let rudder = self.state::<RudderWrapper>();
+        rudder.set_user_id(id.clone());
     }
 }
