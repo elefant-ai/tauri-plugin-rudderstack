@@ -1,13 +1,15 @@
+#![doc = include_str!("../README.md")]
+
 pub use analytics_ext::AnalyticsExt;
 use rudder_wrapper::RudderWrapper;
 use tauri::{
     plugin::{Builder, TauriPlugin},
     Manager, RunEvent, Runtime,
 };
-use tracing::info;
+use tracing::{error, info};
 
 mod analytics_ext;
-mod anonymous_id;
+mod config;
 mod commands;
 mod rudder_wrapper;
 pub mod types;
@@ -45,19 +47,19 @@ pub fn init<R: Runtime>(
     Builder::new(PLUGIN_NAME)
         .invoke_handler(specta.invoke_handler())
         .setup(|app, _| {
-            let anonymous_id = if let Some(id) = anonymous_id {
-                id
-            } else {
-                anonymous_id::get_anonymous_id(app)?
-            };
-            let rudder_analytics = RudderWrapper::new(data_plane, key, anonymous_id);
+            // load the config from the file or create a new one
+            let mut config = config::Config::load(app);
 
-            if let Err(e) = anonymous_id::save_anonymous_id(
-                app,
-                rudder_analytics.get_anonymous_id().to_string(),
-            ) {
-                tracing::error!("Failed to save anonymous id: {:?}", e);
+            // set the anonymous id if provided
+            if let Some(id) = anonymous_id {
+                config.set_anonymous_id(id);
+            };
+            // save the config
+            if let Err(err) = config.save(app) {
+                error!("Failed to save config: {:?}", err);
             }
+            let rudder_analytics = RudderWrapper::new(data_plane, key, config);
+
             app.manage(rudder_analytics);
 
             Ok(())
@@ -65,8 +67,9 @@ pub fn init<R: Runtime>(
         .on_event(|app, event| {
             if let RunEvent::Exit = event {
                 let host = app.state::<RudderWrapper>();
-                let anonymous_id = host.get_anonymous_id();
-                anonymous_id::save_anonymous_id(app, anonymous_id.to_string()).unwrap();
+                if let Err(err) = host.save(app) {
+                    error!("Failed to save config: {:?}", err);
+                }
             }
         })
         .build()

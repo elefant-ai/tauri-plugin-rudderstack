@@ -1,7 +1,7 @@
 use tauri::{Manager as _, Runtime};
 
 use crate::{
-    anonymous_id,
+    config,
     rudder_wrapper::RudderWrapper,
     types::{self, Alias, Group, Identify, Page, Screen, Track},
 };
@@ -70,7 +70,7 @@ pub trait AnalyticsExt<R: Runtime> {
 
     /// Set the anonymous ID of the user. This will be used in all subsequent events.
     /// It will overwrite the previous anonymous ID including the one saved in the file.
-    fn set_anonymous_id(&self, id: String) -> Result<(), anonymous_id::ClientIdError>;
+    fn set_anonymous_id(&self, id: String) -> Result<(), config::ClientIdError>;
 
     /// Set the user ID of the user. This will be used in all subsequent events.
     /// It will overwrite the previous user ID.
@@ -89,11 +89,11 @@ impl<R: Runtime> AnalyticsExt<R> for tauri::AppHandle<R> {
         rudder.send(message)
     }
 
-    fn set_anonymous_id(&self, id: String) -> Result<(), anonymous_id::ClientIdError> {
+    fn set_anonymous_id(&self, id: String) -> Result<(), config::ClientIdError> {
         tracing::debug!("setting anonymous id: {:?}", id);
         let rudder = self.state::<RudderWrapper>();
         rudder.set_anonymous_id(id.clone());
-        anonymous_id::save_anonymous_id(self, id)
+        rudder.save(self)
     }
 
     fn set_user_id(&self, id: Option<String>)  {

@@ -1,41 +1,53 @@
 use std::sync::{Arc, Mutex};
 
 use rudderanalytics::client::RudderAnalytics;
+use tauri::Runtime;
+
+use crate::config::{self, Config};
 
 pub struct RudderWrapper {
     rudder: Arc<RudderAnalytics>,
-    anonymous_id: Mutex<String>,
-    user_id: Mutex<Option<String>>,
+    config: Mutex<config::Config>,
 }
 
 impl RudderWrapper {
     /// Create a new RudderWrapper instance
-    pub fn new(data_plane: String, key: String, anonymous_id: String) -> Self {
+    pub fn new(data_plane: String, key: String, config: Config) -> Self {
         let rudder = Arc::new(RudderAnalytics::load(key, data_plane));
         Self {
             rudder,
-            anonymous_id: Mutex::new(anonymous_id),
-            user_id: Mutex::new(None),
+            config: Mutex::new(config),
         }
     }
 
     /// Get the anonymous id asigned to this client
     pub fn get_anonymous_id(&self) -> String {
-        self.anonymous_id.lock().unwrap().clone()
+        self.config.lock().unwrap().anonymous_id().to_string()
+    }
+
+    pub fn save<R: Runtime>(&self, app: &tauri::AppHandle<R>) -> Result<(), config::ClientIdError> { 
+        let config = self.config.lock().unwrap();
+        config.save(app)
     }
 
     /// Set the anonymous id for this client
     /// This will be used in all subsequent events
     /// it will overwrite the previous anonymous id including the one saved in the file
     pub(crate) fn set_anonymous_id(&self, anonymous_id: String) {
-        *self.anonymous_id.lock().unwrap() = anonymous_id;
+        self.config.lock().unwrap().set_anonymous_id(anonymous_id);
     }
 
     /// Set the user id for this client
     /// This will be used in all subsequent events
     /// it will overwrite the previous user id 
     pub(crate) fn set_user_id(&self, user_id: Option<String>) {
-        *self.user_id.lock().unwrap() = user_id;
+        if let Some(false) = self.config.lock().unwrap().set_user_id(user_id.clone()) {
+            self.send(rudderanalytics::message::Message::Identify(rudderanalytics::message::Identify {
+                user_id,
+                anonymous_id: Some(self.get_anonymous_id()),
+                ..Default::default()
+            }));
+        }
     }
 
     /// Function that will receive user event data
@@ -47,14 +59,9 @@ impl RudderWrapper {
         msg: rudderanalytics::message::Message,
     ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>> {
         let rudder = self.rudder.clone();
-        let anonymous_id = {
-            let id = self.anonymous_id.lock().unwrap();
-            id.clone()
-        };
-        let user_id = {
-            let id = self.user_id.lock().unwrap();
-            id.clone()
-        };
+        let anonymous_id = self.get_anonymous_id();
+        
+        let user_id = {self.config.lock().unwrap().user_id().map(|id| id.to_string())};
         let msg = match msg {
             rudderanalytics::message::Message::Identify(identify) => {
                 rudderanalytics::message::Message::Identify(rudderanalytics::message::Identify {
