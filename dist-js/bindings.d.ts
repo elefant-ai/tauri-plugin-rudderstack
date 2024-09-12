@@ -50,6 +50,10 @@ export type Alias = {
      */
     traits?: JsonValue | null;
     /**
+     * The timestamp associated with this message.
+     */
+    originalTimestamp?: string | null;
+    /**
      * Context associated with this message.
      */
     context?: JsonValue | null;
@@ -65,10 +69,6 @@ export type Alias = {
  */
 export type Group = {
     /**
-     * The user id associated with this message.
-     */
-    userId?: string | null;
-    /**
      * The group the user is being associated with.
      */
     groupId: string;
@@ -76,6 +76,10 @@ export type Group = {
      * The traits to assign to the group.
      */
     traits?: JsonValue | null;
+    /**
+     * The timestamp associated with this message.
+     */
+    originalTimestamp?: string | null;
     /**
      * Context associated with this message.
      */
@@ -91,13 +95,13 @@ export type Group = {
  */
 export type Identify = {
     /**
-     * The user id associated with this message.
-     */
-    userId?: string | null;
-    /**
      * The traits to assign to the user.
      */
     traits?: JsonValue | null;
+    /**
+     * The timestamp associated with this message.
+     */
+    originalTimestamp?: string | null;
     /**
      * Context associated with this message.
      */
@@ -118,10 +122,6 @@ export type JsonValue = null | boolean | number | string | JsonValue[] | {
  */
 export type Page = {
     /**
-     * The user id associated with this message.
-     */
-    userId?: string | null;
-    /**
      * The name of the page being tracked.
      */
     name: string;
@@ -129,6 +129,10 @@ export type Page = {
      * The properties associated with the event.
      */
     properties?: JsonValue | null;
+    /**
+     * The timestamp associated with this message.
+     */
+    originalTimestamp?: string | null;
     /**
      * Context associated with this message.
      */
@@ -148,10 +152,6 @@ export type Page = {
  */
 export type Screen = {
     /**
-     * The user id associated with this message.
-     */
-    userId?: string | null;
-    /**
      * The name of the screen being tracked.
      */
     name: string;
@@ -159,6 +159,10 @@ export type Screen = {
      * The properties associated with the event.
      */
     properties?: JsonValue | null;
+    /**
+     * The timestamp associated with this message.
+     */
+    originalTimestamp?: string | null;
     /**
      * Context associated with this message.
      */
@@ -174,10 +178,6 @@ export type Screen = {
  */
 export type Track = {
     /**
-     * The user id associated with this message.
-     */
-    userId?: string | null;
-    /**
      * The name of the event being tracked.
      */
     event: string;
@@ -185,6 +185,10 @@ export type Track = {
      * The properties associated with the event.
      */
     properties?: JsonValue | null;
+    /**
+     * The timestamp associated with this message.
+     */
+    originalTimestamp?: string | null;
     /**
      * Context associated with this message.
      */

@@ -76,6 +76,10 @@ previousId: string;
  */
 traits?: JsonValue | null; 
 /**
+ * The timestamp associated with this message.
+ */
+originalTimestamp?: string | null; 
+/**
  * Context associated with this message.
  */
 context?: JsonValue | null; 
@@ -90,10 +94,6 @@ integrations?: JsonValue | null }
  */
 export type Group = { 
 /**
- * The user id associated with this message.
- */
-userId?: string | null; 
-/**
  * The group the user is being associated with.
  */
 groupId: string; 
@@ -101,6 +101,10 @@ groupId: string;
  * The traits to assign to the group.
  */
 traits?: JsonValue | null; 
+/**
+ * The timestamp associated with this message.
+ */
+originalTimestamp?: string | null; 
 /**
  * Context associated with this message.
  */
@@ -115,13 +119,13 @@ integrations?: JsonValue | null }
  */
 export type Identify = { 
 /**
- * The user id associated with this message.
- */
-userId?: string | null; 
-/**
  * The traits to assign to the user.
  */
 traits?: JsonValue | null; 
+/**
+ * The timestamp associated with this message.
+ */
+originalTimestamp?: string | null; 
 /**
  * Context associated with this message.
  */
@@ -139,10 +143,6 @@ export type JsonValue = null | boolean | number | string | JsonValue[] | { [key 
  */
 export type Page = { 
 /**
- * The user id associated with this message.
- */
-userId?: string | null; 
-/**
  * The name of the page being tracked.
  */
 name: string; 
@@ -150,6 +150,10 @@ name: string;
  * The properties associated with the event.
  */
 properties?: JsonValue | null; 
+/**
+ * The timestamp associated with this message.
+ */
+originalTimestamp?: string | null; 
 /**
  * Context associated with this message.
  */
@@ -168,10 +172,6 @@ integrations?: JsonValue | null }
  */
 export type Screen = { 
 /**
- * The user id associated with this message.
- */
-userId?: string | null; 
-/**
  * The name of the screen being tracked.
  */
 name: string; 
@@ -179,6 +179,10 @@ name: string;
  * The properties associated with the event.
  */
 properties?: JsonValue | null; 
+/**
+ * The timestamp associated with this message.
+ */
+originalTimestamp?: string | null; 
 /**
  * Context associated with this message.
  */
@@ -193,10 +197,6 @@ integrations?: JsonValue | null }
  */
 export type Track = { 
 /**
- * The user id associated with this message.
- */
-userId?: string | null; 
-/**
  * The name of the event being tracked.
  */
 event: string; 
@@ -204,6 +204,10 @@ event: string;
  * The properties associated with the event.
  */
 properties?: JsonValue | null; 
+/**
+ * The timestamp associated with this message.
+ */
+originalTimestamp?: string | null; 
 /**
  * Context associated with this message.
  */
@@ -229,7 +233,7 @@ type __EventObj__<T> = {
 	once: (
 		cb: TAURI_API_EVENT.EventCallback<T>,
 	) => ReturnType<typeof TAURI_API_EVENT.once<T>>;
-	emit: T extends null
+	emit: null extends T
 		? (payload?: T) => ReturnType<typeof TAURI_API_EVENT.emit>
 		: (payload: T) => ReturnType<typeof TAURI_API_EVENT.emit>;
 };
