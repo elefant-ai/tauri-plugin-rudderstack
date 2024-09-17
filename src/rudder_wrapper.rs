@@ -41,13 +41,13 @@ impl RudderWrapper {
     /// This will be used in all subsequent events
     /// it will overwrite the previous user id 
     pub(crate) fn set_user_id(&self, user_id: Option<String>) {
-        let should_send_identity = {
+        let should_send_identify = {
             let mut config = self.config.lock().unwrap();
             let result = config.set_user_id(user_id.clone());
             result == Some(false)
         };
 
-        if should_send_identity {
+        if should_send_identify {
             self.send(rudderanalytics::message::Message::Identify(rudderanalytics::message::Identify {
                 user_id,
                 anonymous_id: Some(self.get_anonymous_id()),
