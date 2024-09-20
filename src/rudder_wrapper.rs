@@ -48,6 +48,12 @@ impl RudderWrapper {
         };
 
         if should_send_identify {
+            tracing::debug!("set_user_id: sending identify event");
+        } else {
+            tracing::debug!("set_user_id: not sending identify event");
+        }
+
+        if should_send_identify {
             self.send(rudderanalytics::message::Message::Identify(rudderanalytics::message::Identify {
                 user_id,
                 anonymous_id: Some(self.get_anonymous_id()),
