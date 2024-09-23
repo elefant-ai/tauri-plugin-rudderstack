@@ -79,8 +79,16 @@ impl Config {
         self.os = os;
     }
 
+    pub fn get_os(&self) -> Option<&str> {
+        self.os.as_deref()
+    }
+
     pub fn set_app_version(&mut self, app_version: Option<String>) {
         self.app_version = app_version;
+    }
+
+    pub fn get_app_version(&self) -> Option<&str> {
+        self.app_version.as_deref()
     }
 
     /// Save the config to a file.
