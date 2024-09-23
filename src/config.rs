@@ -12,6 +12,10 @@ pub struct Config {
     connected_ids: HashMap<String, String>,
     /// The user ID of the user. this is used to identify the user.
     user_id: Option<String>,
+    /// The OS used.
+    os: Option<String>,
+    /// The app version.
+    app_version: Option<String>,
 }
 
 impl Default for Config {
@@ -65,6 +69,14 @@ impl Config {
         } else {
             None
         }
+    }
+
+    pub fn set_os(&mut self, os: Option<String>) {
+        self.os = os;
+    }
+
+    pub fn set_app_version(&mut self, app_version: Option<String>) {
+        self.app_version = app_version;
     }
 
     /// Save the config to a file.
