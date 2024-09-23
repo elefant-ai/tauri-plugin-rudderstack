@@ -83,7 +83,7 @@ impl RudderWrapper {
         let user_id = {self.config.lock().unwrap().user_id().map(|id| id.to_string())};
         let os  = {self.config.lock().unwrap().os().map(|os| os.to_string())};
         let app_version = {self.config.lock().unwrap().app_version().map(|app_version| app_version.to_string())};
-        let context: Option<Value> = Some(json!({
+        let context: Option<serde_json::Value> = Some(serde_json::json!({
             "os": os,
             "app_version": app_version
         }));

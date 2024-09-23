@@ -24,6 +24,8 @@ impl Default for Config {
             anonymous_id: uuid::Uuid::new_v4().to_string(),
             connected_ids: HashMap::new(),
             user_id: None,
+            os: None,
+            app_version: None,
         }
     }
 }
@@ -34,6 +36,8 @@ impl Config {
             anonymous_id,
             connected_ids: HashMap::new(),
             user_id: None,
+            os: None,
+            app_version: None,
         }
     }
 
