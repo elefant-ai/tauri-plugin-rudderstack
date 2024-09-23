@@ -12,6 +12,10 @@ pub struct Config {
     connected_ids: HashMap<String, String>,
     /// The user ID of the user. this is used to identify the user.
     user_id: Option<String>,
+    /// The OS used.
+    os: Option<String>,
+    /// The app version.
+    app_version: Option<String>,
 }
 
 impl Default for Config {
@@ -20,6 +24,8 @@ impl Default for Config {
             anonymous_id: uuid::Uuid::new_v4().to_string(),
             connected_ids: HashMap::new(),
             user_id: None,
+            os: None,
+            app_version: None,
         }
     }
 }
@@ -30,6 +36,8 @@ impl Config {
             anonymous_id,
             connected_ids: HashMap::new(),
             user_id: None,
+            os: None,
+            app_version: None,
         }
     }
 
@@ -65,6 +73,22 @@ impl Config {
         } else {
             None
         }
+    }
+
+    pub fn set_os(&mut self, os: Option<String>) {
+        self.os = os;
+    }
+
+    pub fn get_os(&self) -> Option<&str> {
+        self.os.as_deref()
+    }
+
+    pub fn set_app_version(&mut self, app_version: Option<String>) {
+        self.app_version = app_version;
+    }
+
+    pub fn get_app_version(&self) -> Option<&str> {
+        self.app_version.as_deref()
     }
 
     /// Save the config to a file.

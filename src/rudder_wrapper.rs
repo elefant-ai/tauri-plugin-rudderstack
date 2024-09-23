@@ -56,6 +56,18 @@ impl RudderWrapper {
         }
     }
 
+    /// Set the os for this client
+    /// This will be used in all subsequent events
+    pub(crate) fn set_os(&self, os: Option<String>) {
+        self.config.lock().unwrap().set_os(os);
+    }
+
+    /// Set the app version for this client
+    /// This will be used in all subsequent events
+    pub(crate) fn set_app_version(&self, app_version: Option<String>) {
+        self.config.lock().unwrap().set_app_version(app_version);
+    }
+
     /// Function that will receive user event data
     /// and after validation
     /// modify it to Ruddermessage format and send the event to data plane url \
@@ -69,11 +81,18 @@ impl RudderWrapper {
         let anonymous_id = self.get_anonymous_id();
         
         let user_id = {self.config.lock().unwrap().user_id().map(|id| id.to_string())};
+        let os  = {self.config.lock().unwrap().get_os().map(|os| os.to_string())};
+        let app_version = {self.config.lock().unwrap().get_app_version().map(|app_version| app_version.to_string())};
+        let context: Option<serde_json::Value> = Some(serde_json::json!({
+            "os": os,
+            "app_version": app_version
+        }));
         let msg = match msg {
             rudderanalytics::message::Message::Identify(identify) => {
                 rudderanalytics::message::Message::Identify(rudderanalytics::message::Identify {
                     anonymous_id: Some(anonymous_id),
                     user_id,
+                    context: context,
                     ..identify
                 })
             }
@@ -84,6 +103,7 @@ impl RudderWrapper {
                 rudderanalytics::message::Message::Group(rudderanalytics::message::Group {
                     anonymous_id: Some(anonymous_id),
                     user_id,
+                    context: context,
                     ..group
                 })
             }
@@ -91,6 +111,7 @@ impl RudderWrapper {
                 rudderanalytics::message::Message::Page(rudderanalytics::message::Page {
                     anonymous_id: Some(anonymous_id),
                     user_id,
+                    context: context,
                     ..page
                 })
             }
@@ -98,6 +119,7 @@ impl RudderWrapper {
                 rudderanalytics::message::Message::Screen(rudderanalytics::message::Screen {
                     anonymous_id: Some(anonymous_id),
                     user_id,
+                    context: context,
                     ..screen
                 })
             }
@@ -105,6 +127,7 @@ impl RudderWrapper {
                 rudderanalytics::message::Message::Track(rudderanalytics::message::Track {
                     anonymous_id: Some(anonymous_id),
                     user_id,
+                    context: context,
                     ..track
                 })
             }
@@ -115,6 +138,7 @@ impl RudderWrapper {
                         .into_iter()
                         .map(|msg| handle_batch_message(msg, anonymous_id.clone(),user_id.clone()))
                         .collect(),
+                    context: context,
                     ..batch
                 })
             }
