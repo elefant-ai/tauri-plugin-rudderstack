@@ -295,95 +295,69 @@
       "type": "string",
       "oneOf": [
         {
-          "description": "allow-send-analytics-alias -> Enables the send_analytics_alias command without any pre-configured scope.",
+          "description": "Enables the send_analytics_alias command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "allow-send-analytics-alias"
-          ]
+          "const": "allow-send-analytics-alias"
         },
         {
-          "description": "deny-send-analytics-alias -> Denies the send_analytics_alias command without any pre-configured scope.",
+          "description": "Denies the send_analytics_alias command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "deny-send-analytics-alias"
-          ]
+          "const": "deny-send-analytics-alias"
         },
         {
-          "description": "allow-send-analytics-group -> Enables the send_analytics_group command without any pre-configured scope.",
+          "description": "Enables the send_analytics_group command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "allow-send-analytics-group"
-          ]
+          "const": "allow-send-analytics-group"
         },
         {
-          "description": "deny-send-analytics-group -> Denies the send_analytics_group command without any pre-configured scope.",
+          "description": "Denies the send_analytics_group command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "deny-send-analytics-group"
-          ]
+          "const": "deny-send-analytics-group"
         },
         {
-          "description": "allow-send-analytics-identify -> Enables the send_analytics_identify command without any pre-configured scope.",
+          "description": "Enables the send_analytics_identify command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "allow-send-analytics-identify"
-          ]
+          "const": "allow-send-analytics-identify"
         },
         {
-          "description": "deny-send-analytics-identify -> Denies the send_analytics_identify command without any pre-configured scope.",
+          "description": "Denies the send_analytics_identify command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "deny-send-analytics-identify"
-          ]
+          "const": "deny-send-analytics-identify"
         },
         {
-          "description": "allow-send-analytics-page -> Enables the send_analytics_page command without any pre-configured scope.",
+          "description": "Enables the send_analytics_page command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "allow-send-analytics-page"
-          ]
+          "const": "allow-send-analytics-page"
         },
         {
-          "description": "deny-send-analytics-page -> Denies the send_analytics_page command without any pre-configured scope.",
+          "description": "Denies the send_analytics_page command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "deny-send-analytics-page"
-          ]
+          "const": "deny-send-analytics-page"
         },
         {
-          "description": "allow-send-analytics-screen -> Enables the send_analytics_screen command without any pre-configured scope.",
+          "description": "Enables the send_analytics_screen command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "allow-send-analytics-screen"
-          ]
+          "const": "allow-send-analytics-screen"
         },
         {
-          "description": "deny-send-analytics-screen -> Denies the send_analytics_screen command without any pre-configured scope.",
+          "description": "Denies the send_analytics_screen command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "deny-send-analytics-screen"
-          ]
+          "const": "deny-send-analytics-screen"
         },
         {
-          "description": "allow-send-analytics-track -> Enables the send_analytics_track command without any pre-configured scope.",
+          "description": "Enables the send_analytics_track command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "allow-send-analytics-track"
-          ]
+          "const": "allow-send-analytics-track"
         },
         {
-          "description": "deny-send-analytics-track -> Denies the send_analytics_track command without any pre-configured scope.",
+          "description": "Denies the send_analytics_track command without any pre-configured scope.",
           "type": "string",
-          "enum": [
-            "deny-send-analytics-track"
-          ]
+          "const": "deny-send-analytics-track"
         },
         {
-          "description": "default -> This permission set configures what kind of\noperations are available from the rudderstack plugin.\n\n#### Granted Permissions\n\nAll operations are enabled by default.\n\n",
+          "description": "This permission set configures what kind of\noperations are available from the rudderstack plugin.\n\n#### Granted Permissions\n\nAll operations are enabled by default.\n\n",
           "type": "string",
-          "enum": [
-            "default"
-          ]
+          "const": "default"
         }
       ]
     }
