@@ -1,6 +1,20 @@
 import { Alias, commands, Group, Identify, Page, Screen, Track } from "./bindings";
 export * from "./bindings";
 
+interface PageProperties {
+    title: string;
+    url: string;
+    path: string;
+}
+
+const getPageProperties = (): PageProperties => {
+    return {
+        title: document.title,
+        url: window.location.href,
+        path: window.location.pathname,
+    }
+};
+
 
 /**
  * Watch for URL changes and send analytics events.
@@ -12,11 +26,12 @@ export const watchURLChanges = () => {
     history.pushState = function () {
         // @ts-expect-error
         rs.apply(history, arguments); // preserve normal functionality
+        const props = getPageProperties();
         sendPageEvent({
-            name: window.location.pathname,
+            name: props.path,
             properties: {
-                title: document.title,
-                url: window.location.href
+                title: props.title,
+                url: props.url,
             },
         });
     };
@@ -42,12 +57,36 @@ export const sendScreenEvent = async (screen: Screen) => {
     await commands.sendAnalyticsScreen(screen);
 }
 
+const addPageProperties = (message: Track) => {
+    const pageProperties = getPageProperties();
+
+    // Ensure message.properties is initialized as an object
+    if (!message.properties || typeof message.properties !== 'object') {
+        message.properties = {};
+    }
+
+    // Cast properties to an object for type safety
+    const properties = message.properties as { [key: string]: any };
+
+    // Merge the page properties into the properties field
+    properties.page = {
+        ...(properties.page || {}),
+        ...pageProperties,
+    };
+
+    // Assign the updated properties back to the message
+    message.properties = properties;
+    return message;
+}
+
+
 /**
  * a track event
  * @param {Track} message
  */
 export const sendTrackEvent = async (message: Track) => {
-    await commands.sendAnalyticsTrack(message);
+    const msg = addPageProperties(message);
+    await commands.sendAnalyticsTrack(msg);
 }
 
 /**

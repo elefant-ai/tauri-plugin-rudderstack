@@ -46,6 +46,13 @@ const commands = {
     }
 };
 
+const getPageProperties = () => {
+    return {
+        title: document.title,
+        url: window.location.href,
+        path: window.location.pathname,
+    };
+};
 /**
  * Watch for URL changes and send analytics events.
  *
@@ -56,11 +63,12 @@ const watchURLChanges = () => {
     history.pushState = function () {
         // @ts-expect-error
         rs.apply(history, arguments); // preserve normal functionality
+        const props = getPageProperties();
         sendPageEvent({
-            name: window.location.pathname,
+            name: props.path,
             properties: {
-                title: document.title,
-                url: window.location.href
+                title: props.title,
+                url: props.url,
             },
         });
     };
@@ -82,12 +90,30 @@ const sendPageEvent = async (page) => {
 const sendScreenEvent = async (screen) => {
     await commands.sendAnalyticsScreen(screen);
 };
+const addPageProperties = (message) => {
+    const pageProperties = getPageProperties();
+    // Ensure message.properties is initialized as an object
+    if (!message.properties || typeof message.properties !== 'object') {
+        message.properties = {};
+    }
+    // Cast properties to an object for type safety
+    const properties = message.properties;
+    // Merge the page properties into the properties field
+    properties.page = {
+        ...(properties.page || {}),
+        ...pageProperties,
+    };
+    // Assign the updated properties back to the message
+    message.properties = properties;
+    return message;
+};
 /**
  * a track event
  * @param {Track} message
  */
 const sendTrackEvent = async (message) => {
-    await commands.sendAnalyticsTrack(message);
+    const msg = addPageProperties(message);
+    await commands.sendAnalyticsTrack(msg);
 };
 /**
  * a identify event
