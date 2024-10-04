@@ -16,7 +16,7 @@ All operations are enabled by default.
 - `allow-send-analytics-screen`
 - `allow-send-analytics-track`
 
-## Permission Table 
+## Permission Table
 
 <table>
 <tr>
