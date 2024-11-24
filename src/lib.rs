@@ -9,8 +9,8 @@ use tauri::{
 use tracing::{error, info};
 
 mod analytics_ext;
-mod config;
 mod commands;
+mod config;
 mod rudder_wrapper;
 pub mod types;
 
