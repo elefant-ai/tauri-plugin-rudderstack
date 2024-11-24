@@ -11,16 +11,12 @@ edition = "2021"
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 specta = { version = "2.0.0-rc.20", features = ["bigdecimal", "serde_json", "chrono"] }
-# tauri-specta = { version = "2.0.0-rc.20", features = [
-#     "derive",
-#     "typescript",
-# ] }
-tauri-specta = { git = "https://github.com/specta-rs/tauri-specta.git", rev = "9aa4417", features = [
+tauri-specta = { version = "2.0.0-rc.20", features = [
     "derive",
     "typescript",
 ] }
-tauri = { version = "2.0", features = ["wry"] }
-thiserror = "1"
+tauri = { version = "2.1", features = ["wry"] }
+thiserror = "2"
 serde_json = "1"
 tracing = "0.1"
 uuid = { version = "1.11", features = ["v4"] }
