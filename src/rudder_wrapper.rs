@@ -112,7 +112,7 @@ impl RudderWrapper {
                 rudderanalytics::message::Message::Identify(rudderanalytics::message::Identify {
                     anonymous_id: Some(anonymous_id),
                     user_id,
-                    context: context,
+                    context,
                     ..identify
                 })
             }
@@ -123,7 +123,7 @@ impl RudderWrapper {
                 rudderanalytics::message::Message::Group(rudderanalytics::message::Group {
                     anonymous_id: Some(anonymous_id),
                     user_id,
-                    context: context,
+                    context,
                     ..group
                 })
             }
@@ -131,7 +131,7 @@ impl RudderWrapper {
                 rudderanalytics::message::Message::Page(rudderanalytics::message::Page {
                     anonymous_id: Some(anonymous_id),
                     user_id,
-                    context: context,
+                    context,
                     ..page
                 })
             }
@@ -139,7 +139,7 @@ impl RudderWrapper {
                 rudderanalytics::message::Message::Screen(rudderanalytics::message::Screen {
                     anonymous_id: Some(anonymous_id),
                     user_id,
-                    context: context,
+                    context,
                     ..screen
                 })
             }
@@ -147,7 +147,7 @@ impl RudderWrapper {
                 rudderanalytics::message::Message::Track(rudderanalytics::message::Track {
                     anonymous_id: Some(anonymous_id),
                     user_id,
-                    context: context,
+                    context,
                     ..track
                 })
             }
@@ -158,7 +158,7 @@ impl RudderWrapper {
                         .into_iter()
                         .map(|msg| handle_batch_message(msg, anonymous_id.clone(), user_id.clone()))
                         .collect(),
-                    context: context,
+                    context,
                     ..batch
                 })
             }

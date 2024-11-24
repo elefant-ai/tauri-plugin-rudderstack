@@ -62,11 +62,11 @@ impl Config {
     pub fn set_user_id(&mut self, user_id: Option<String>) -> Option<bool> {
         self.user_id = user_id.clone();
         if let Some(id) = user_id {
-            if self.connected_ids.contains_key(&id) {
-                Some(true)
-            } else {
-                self.connected_ids.insert(id, self.anonymous_id.clone());
+            if let std::collections::hash_map::Entry::Vacant(e) = self.connected_ids.entry(id) {
+                e.insert(self.anonymous_id.clone());
                 Some(false)
+            } else {
+                Some(true)
             }
         } else {
             None
