@@ -25,7 +25,7 @@ impl RudderWrapper {
         self.config.lock().unwrap().anonymous_id().to_string()
     }
 
-    pub fn save<R: Runtime>(&self, app: &tauri::AppHandle<R>) -> Result<(), config::ClientIdError> { 
+    pub fn save<R: Runtime>(&self, app: &tauri::AppHandle<R>) -> Result<(), config::ClientIdError> {
         let config = self.config.lock().unwrap();
         config.save(app)
     }
@@ -39,7 +39,7 @@ impl RudderWrapper {
 
     /// Set the user id for this client
     /// This will be used in all subsequent events
-    /// it will overwrite the previous user id 
+    /// it will overwrite the previous user id
     pub(crate) fn set_user_id(&self, user_id: Option<String>) {
         let should_send_identify = {
             let mut config = self.config.lock().unwrap();
@@ -48,11 +48,13 @@ impl RudderWrapper {
         };
 
         if should_send_identify {
-            self.send(rudderanalytics::message::Message::Identify(rudderanalytics::message::Identify {
-                user_id,
-                anonymous_id: Some(self.get_anonymous_id()),
-                ..Default::default()
-            }));
+            self.send(rudderanalytics::message::Message::Identify(
+                rudderanalytics::message::Identify {
+                    user_id,
+                    anonymous_id: Some(self.get_anonymous_id()),
+                    ..Default::default()
+                },
+            ));
         }
     }
 
@@ -79,10 +81,28 @@ impl RudderWrapper {
     ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>> {
         let rudder = self.rudder.clone();
         let anonymous_id = self.get_anonymous_id();
-        
-        let user_id = {self.config.lock().unwrap().user_id().map(|id| id.to_string())};
-        let os  = {self.config.lock().unwrap().get_os().map(|os| os.to_string())};
-        let app_version = {self.config.lock().unwrap().get_app_version().map(|app_version| app_version.to_string())};
+
+        let user_id = {
+            self.config
+                .lock()
+                .unwrap()
+                .user_id()
+                .map(|id| id.to_string())
+        };
+        let os = {
+            self.config
+                .lock()
+                .unwrap()
+                .get_os()
+                .map(|os| os.to_string())
+        };
+        let app_version = {
+            self.config
+                .lock()
+                .unwrap()
+                .get_app_version()
+                .map(|app_version| app_version.to_string())
+        };
         let context: Option<serde_json::Value> = Some(serde_json::json!({
             "os": os,
             "app_version": app_version
@@ -92,7 +112,7 @@ impl RudderWrapper {
                 rudderanalytics::message::Message::Identify(rudderanalytics::message::Identify {
                     anonymous_id: Some(anonymous_id),
                     user_id,
-                    context: context,
+                    context,
                     ..identify
                 })
             }
@@ -103,7 +123,7 @@ impl RudderWrapper {
                 rudderanalytics::message::Message::Group(rudderanalytics::message::Group {
                     anonymous_id: Some(anonymous_id),
                     user_id,
-                    context: context,
+                    context,
                     ..group
                 })
             }
@@ -111,7 +131,7 @@ impl RudderWrapper {
                 rudderanalytics::message::Message::Page(rudderanalytics::message::Page {
                     anonymous_id: Some(anonymous_id),
                     user_id,
-                    context: context,
+                    context,
                     ..page
                 })
             }
@@ -119,7 +139,7 @@ impl RudderWrapper {
                 rudderanalytics::message::Message::Screen(rudderanalytics::message::Screen {
                     anonymous_id: Some(anonymous_id),
                     user_id,
-                    context: context,
+                    context,
                     ..screen
                 })
             }
@@ -127,7 +147,7 @@ impl RudderWrapper {
                 rudderanalytics::message::Message::Track(rudderanalytics::message::Track {
                     anonymous_id: Some(anonymous_id),
                     user_id,
-                    context: context,
+                    context,
                     ..track
                 })
             }
@@ -136,9 +156,9 @@ impl RudderWrapper {
                     batch: batch
                         .batch
                         .into_iter()
-                        .map(|msg| handle_batch_message(msg, anonymous_id.clone(),user_id.clone()))
+                        .map(|msg| handle_batch_message(msg, anonymous_id.clone(), user_id.clone()))
                         .collect(),
-                    context: context,
+                    context,
                     ..batch
                 })
             }

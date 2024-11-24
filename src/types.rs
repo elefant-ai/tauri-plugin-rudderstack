@@ -21,13 +21,12 @@ pub enum Message {
 /// The identify call lets you identify a visiting user and associate them to their actions. It also lets you record the traits about them like their name, email address, etc.
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize, Default, specta::Type)]
 pub struct Identify {
-
     /// The traits to assign to the user.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub traits: Option<Value>,
 
     /// The timestamp associated with this message.
-   #[serde(rename="originalTimestamp", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "originalTimestamp", skip_serializing_if = "Option::is_none")]
     pub original_timestamp: Option<DateTime<Utc>>,
 
     /// Context associated with this message.
@@ -43,7 +42,6 @@ pub struct Identify {
 /// The track call lets you record the user actions along with their associated properties. Each user action is called an event.
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize, Default, specta::Type)]
 pub struct Track {
-
     /// The name of the event being tracked.
     pub event: String,
 
@@ -52,7 +50,7 @@ pub struct Track {
     pub properties: Option<Value>,
 
     /// The timestamp associated with this message.
-   #[serde(rename="originalTimestamp", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "originalTimestamp", skip_serializing_if = "Option::is_none")]
     pub original_timestamp: Option<DateTime<Utc>>,
 
     /// Context associated with this message.
@@ -70,7 +68,6 @@ pub struct Track {
 /// RudderStack recommends calling page at least once every page load.
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize, Default, specta::Type)]
 pub struct Page {
-
     /// The name of the page being tracked.
     pub name: String,
 
@@ -79,7 +76,7 @@ pub struct Page {
     pub properties: Option<Value>,
 
     /// The timestamp associated with this message.
-   #[serde(rename="originalTimestamp", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "originalTimestamp", skip_serializing_if = "Option::is_none")]
     pub original_timestamp: Option<DateTime<Utc>>,
 
     /// Context associated with this message.
@@ -99,7 +96,6 @@ pub struct Page {
 /// The screen call is the mobile equivalent of the page call.
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize, Default, specta::Type)]
 pub struct Screen {
-
     /// The name of the screen being tracked.
     pub name: String,
 
@@ -108,7 +104,7 @@ pub struct Screen {
     pub properties: Option<Value>,
 
     /// The timestamp associated with this message.
-   #[serde(rename="originalTimestamp", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "originalTimestamp", skip_serializing_if = "Option::is_none")]
     pub original_timestamp: Option<DateTime<Utc>>,
 
     /// Context associated with this message.
@@ -125,7 +121,6 @@ pub struct Screen {
 /// An identified user can be in more than one group.
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize, Default, specta::Type)]
 pub struct Group {
-
     /// The group the user is being associated with.
     #[serde(rename = "groupId")]
     pub group_id: String,
@@ -135,7 +130,7 @@ pub struct Group {
     pub traits: Option<Value>,
 
     /// The timestamp associated with this message.
-   #[serde(rename="originalTimestamp", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "originalTimestamp", skip_serializing_if = "Option::is_none")]
     pub original_timestamp: Option<DateTime<Utc>>,
 
     /// Context associated with this message.
@@ -168,7 +163,7 @@ pub struct Alias {
     pub traits: Option<Value>,
 
     /// The timestamp associated with this message.
-   #[serde(rename="originalTimestamp", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "originalTimestamp", skip_serializing_if = "Option::is_none")]
     pub original_timestamp: Option<DateTime<Utc>>,
 
     /// Context associated with this message.
@@ -196,7 +191,7 @@ pub struct Batch {
     pub integrations: Option<Value>,
 
     /// The timestamp associated with this message.
-   #[serde(rename="originalTimestamp", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "originalTimestamp", skip_serializing_if = "Option::is_none")]
     pub original_timestamp: Option<DateTime<Utc>>,
 }
 

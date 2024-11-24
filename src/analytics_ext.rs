@@ -74,7 +74,7 @@ pub trait AnalyticsExt<R: Runtime> {
 
     /// Set the user ID of the user. This will be used in all subsequent events.
     /// It will overwrite the previous user ID.
-    fn set_user_id(&self, id: Option<String>) ;
+    fn set_user_id(&self, id: Option<String>);
 
     /// Set the OS of the user. This will be used in all subsequent events.
     fn set_os(&self, os: Option<String>);
@@ -102,7 +102,7 @@ impl<R: Runtime> AnalyticsExt<R> for tauri::AppHandle<R> {
         rudder.save(self)
     }
 
-    fn set_user_id(&self, id: Option<String>)  {
+    fn set_user_id(&self, id: Option<String>) {
         tracing::debug!("setting user id: {:?}", id);
         let rudder = self.state::<RudderWrapper>();
         rudder.set_user_id(id.clone());

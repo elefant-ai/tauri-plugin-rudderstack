@@ -3,7 +3,6 @@ use std::{collections::HashMap, path::PathBuf};
 use tauri::{AppHandle, Manager, Runtime};
 use tracing::debug;
 
-
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
 pub struct Config {
     /// The anonymous ID of the user. this is normally generated and saved in the file.
@@ -46,7 +45,7 @@ impl Config {
         &self.anonymous_id
     }
 
-    /// Set the anonymous ID of the user. 
+    /// Set the anonymous ID of the user.
     pub fn set_anonymous_id(&mut self, anonymous_id: String) {
         self.anonymous_id = anonymous_id;
     }
@@ -60,16 +59,15 @@ impl Config {
     /// if the user ID is passed in is None, it will return None. \
     /// if the user ID is passed in is Some, it will return Some(true) if the user ID is already connected to the anonymous ID. \
     /// if the user ID is passed in is Some, it will return Some(false) if the user ID is not connected to the anonymous ID.
-    pub fn set_user_id(&mut self, user_id: Option<String>) -> Option<bool>  {
+    pub fn set_user_id(&mut self, user_id: Option<String>) -> Option<bool> {
         self.user_id = user_id.clone();
         if let Some(id) = user_id {
-            if self.connected_ids.contains_key(&id) {
-                Some(true)
-            } else {
-                self.connected_ids.insert(id, self.anonymous_id.clone());
+            if let std::collections::hash_map::Entry::Vacant(e) = self.connected_ids.entry(id) {
+                e.insert(self.anonymous_id.clone());
                 Some(false)
+            } else {
+                Some(true)
             }
-            
         } else {
             None
         }
