@@ -76,7 +76,7 @@ impl Config {
         Self::try_load(handle).unwrap_or_default()
     }
 
-    fn try_load<R: Runtime>(handle: &AppHandle<R>) -> Result<Self, ClientIdError> {
+    pub(crate) fn try_load<R: Runtime>(handle: &AppHandle<R>) -> Result<Self, ClientIdError> {
         let path = Self::get_path(handle)?;
         let config = std::fs::read(&path)?;
         Ok(serde_json::from_slice(&config)?)
