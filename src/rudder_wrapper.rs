@@ -58,12 +58,6 @@ impl RudderWrapper {
         }
     }
 
-    /// Set the os for this client
-    /// This will be used in all subsequent events
-    pub(crate) fn set_os(&self, os: Option<String>) {
-        self.config.lock().unwrap().set_os(os);
-    }
-
     /// Set the app version for this client
     /// This will be used in all subsequent events
     pub(crate) fn set_app_version(&self, app_version: Option<String>) {
@@ -89,13 +83,6 @@ impl RudderWrapper {
                 .user_id()
                 .map(|id| id.to_string())
         };
-        let os = {
-            self.config
-                .lock()
-                .unwrap()
-                .get_os()
-                .map(|os| os.to_string())
-        };
         let app_version = {
             self.config
                 .lock()
@@ -104,7 +91,7 @@ impl RudderWrapper {
                 .map(|app_version| app_version.to_string())
         };
         let context: Option<serde_json::Value> = Some(serde_json::json!({
-            "os": os,
+            "os": std::env::consts::OS,
             "app_version": app_version
         }));
         let msg = match msg {
