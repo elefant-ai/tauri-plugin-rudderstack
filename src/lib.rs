@@ -35,6 +35,7 @@ pub struct RudderStackBuilder {
     key: String,
     anonymous_id: Option<String>,
     first_run: bool,
+    context: types::Context,
 }
 
 impl RudderStackBuilder {
@@ -49,6 +50,7 @@ impl RudderStackBuilder {
             key: key.into(),
             anonymous_id: None,
             first_run: false,
+            context: serde_json::Map::new(),
         }
     }
 
@@ -63,6 +65,15 @@ impl RudderStackBuilder {
     /// If set to true, the plugin will send a first run event on the first run.
     pub fn first_run(mut self, first_run: bool) -> Self {
         self.first_run = first_run;
+        self
+    }
+
+    /// Allows you to set the context that will be sent with every event.
+    pub fn with_context<F>(mut self, f: F) -> Self
+    where
+        F: FnOnce(&mut serde_json::Map<String, serde_json::Value>),
+    {
+        f(&mut self.context);
         self
     }
 
@@ -88,7 +99,7 @@ impl RudderStackBuilder {
                 if let Err(err) = config.save(app) {
                     error!("Failed to save config: {:?}", err);
                 }
-                let rudder_analytics = RudderWrapper::new(self.data_plane, self.key, config);
+                let rudder_analytics = RudderWrapper::new(self.data_plane, self.key, config, self.context);
 
                 app.manage(rudder_analytics);
 

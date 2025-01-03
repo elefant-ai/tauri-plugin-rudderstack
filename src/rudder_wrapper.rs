@@ -17,20 +17,21 @@ fn merge(a: &mut serde_json::Value, b: &serde_json::Value) {
     }
 }
 
+
 pub struct RudderWrapper {
     rudder: Arc<RudderAnalytics>,
     config: Mutex<config::Config>,
-    context: Mutex<serde_json::Map<String, serde_json::Value>>,
+    context: Mutex<crate::types::Context>,
 }
 
 impl RudderWrapper {
     /// Create a new RudderWrapper instance
-    pub fn new(data_plane: String, key: String, config: Config) -> Self {
+    pub fn new(data_plane: String, key: String, config: Config, context: crate::types::Context) -> Self {
         let rudder = Arc::new(RudderAnalytics::load(key, data_plane));
         Self {
             rudder,
             config: Mutex::new(config),
-            context: Mutex::new(serde_json::Map::new()),
+            context: Mutex::new(context),
         }
     }
 

@@ -5,6 +5,8 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
+pub(crate) type Context = serde_json::Map<String, serde_json::Value>;
+
 /// An enum containing all values which may be sent to RudderStack's API.
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize, specta::Type)]
 pub enum Message {

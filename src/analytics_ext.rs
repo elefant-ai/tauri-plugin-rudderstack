@@ -86,7 +86,7 @@ pub trait AnalyticsExt<R: Runtime> {
     fn clear_context(&self);
 
     /// Get the context hash map
-    fn get_context(&self) -> serde_json::Map<String, serde_json::Value>;
+    fn get_context(&self) -> crate::types::Context;
 }
 
 impl<R: Runtime> AnalyticsExt<R> for tauri::AppHandle<R> {
@@ -132,7 +132,7 @@ impl<R: Runtime> AnalyticsExt<R> for tauri::AppHandle<R> {
         rudder.clear_context();
     }
 
-    fn get_context(&self) -> serde_json::Map<String, serde_json::Value> {
+    fn get_context(&self) -> crate::types::Context {
         tracing::debug!("getting context");
         let rudder = self.state::<RudderWrapper>();
         rudder.get_context()
@@ -168,7 +168,7 @@ impl<R: Runtime> AnalyticsExt<R> for tauri::App<R> {
         self.handle().clear_context()
     }
 
-    fn get_context(&self) -> serde_json::Map<String, serde_json::Value> {
+    fn get_context(&self) -> crate::types::Context {
         self.handle().get_context()
     }
 }
