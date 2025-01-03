@@ -1,14 +1,26 @@
-use std::{collections::HashMap, sync::{Arc, Mutex}};
+use std::sync::{Arc, Mutex};
 
 use rudderanalytics::client::RudderAnalytics;
 use tauri::Runtime;
 
 use crate::config::{self, Config};
 
+/// merge two json values
+fn merge(a: &mut serde_json::Value, b: &serde_json::Value) {
+    match (a, b) {
+        (serde_json::Value::Object(a), serde_json::Value::Object(b)) => {
+            for (k, v) in b {
+                merge(a.entry(k.clone()).or_insert(serde_json::Value::Null), v);
+            }
+        }
+        (a, b) => *a = b.clone(),
+    }
+}
+
 pub struct RudderWrapper {
     rudder: Arc<RudderAnalytics>,
     config: Mutex<config::Config>,
-    context: Mutex<HashMap<String, serde_json::Value>>,
+    context: Mutex<serde_json::Map<String, serde_json::Value>>,
 }
 
 impl RudderWrapper {
@@ -18,7 +30,7 @@ impl RudderWrapper {
         Self {
             rudder,
             config: Mutex::new(config),
-            context: Mutex::new(HashMap::new()),
+            context: Mutex::new(serde_json::Map::new()),
         }
     }
 
@@ -32,7 +44,11 @@ impl RudderWrapper {
         config.save(app)
     }
 
-    pub(crate) fn add_to_context(&self, key: String, value: serde_json::Value) -> Option<serde_json::Value> {
+    pub(crate) fn add_to_context(
+        &self,
+        key: String,
+        value: serde_json::Value,
+    ) -> Option<serde_json::Value> {
         let mut context = self.context.lock().unwrap();
         context.insert(key, value)
     }
@@ -42,7 +58,7 @@ impl RudderWrapper {
         context.remove(key)
     }
 
-    pub(crate) fn get_context(&self) -> HashMap<String, serde_json::Value> {
+    pub(crate) fn get_context(&self) -> serde_json::Map<String, serde_json::Value> {
         self.context.lock().unwrap().clone()
     }
 
@@ -97,12 +113,19 @@ impl RudderWrapper {
                 .user_id()
                 .map(|id| id.to_string())
         };
-        let context = {
+        let mut context = {
             let context = self.context.lock().unwrap();
-            serde_json::to_value(&*context).ok()
+            serde_json::Value::Object(context.clone())
         };
         let msg = match msg {
-            rudderanalytics::message::Message::Identify(identify) => {
+            rudderanalytics::message::Message::Identify(mut identify) => {
+                let context = {
+                    let mut context = context.clone();
+                    if let Some(identify_context) = identify.context {
+                        merge(&mut context, &identify_context);
+                    }
+                    Some(context)
+                };
                 rudderanalytics::message::Message::Identify(rudderanalytics::message::Identify {
                     anonymous_id: Some(anonymous_id),
                     user_id,
@@ -114,6 +137,12 @@ impl RudderWrapper {
                 rudderanalytics::message::Message::Alias(alias)
             }
             rudderanalytics::message::Message::Group(group) => {
+                let context = {
+                    if let Some(group_context) = group.context {
+                        merge(&mut context, &group_context);
+                    }
+                    Some(context)
+                };
                 rudderanalytics::message::Message::Group(rudderanalytics::message::Group {
                     anonymous_id: Some(anonymous_id),
                     user_id,
@@ -122,6 +151,12 @@ impl RudderWrapper {
                 })
             }
             rudderanalytics::message::Message::Page(page) => {
+                let context = {
+                    if let Some(page_context) = page.context {
+                        merge(&mut context, &page_context);
+                    }
+                    Some(context)
+                };
                 rudderanalytics::message::Message::Page(rudderanalytics::message::Page {
                     anonymous_id: Some(anonymous_id),
                     user_id,
@@ -130,6 +165,12 @@ impl RudderWrapper {
                 })
             }
             rudderanalytics::message::Message::Screen(screen) => {
+                let context = {
+                    if let Some(screen_context) = screen.context {
+                        merge(&mut context, &screen_context);
+                    }
+                    Some(context)
+                };
                 rudderanalytics::message::Message::Screen(rudderanalytics::message::Screen {
                     anonymous_id: Some(anonymous_id),
                     user_id,
@@ -138,6 +179,12 @@ impl RudderWrapper {
                 })
             }
             rudderanalytics::message::Message::Track(track) => {
+                let context = {
+                    if let Some(track_context) = track.context {
+                        merge(&mut context, &track_context);
+                    }
+                    Some(context)
+                };
                 rudderanalytics::message::Message::Track(rudderanalytics::message::Track {
                     anonymous_id: Some(anonymous_id),
                     user_id,
@@ -146,6 +193,12 @@ impl RudderWrapper {
                 })
             }
             rudderanalytics::message::Message::Batch(batch) => {
+                let context = {
+                    if let Some(batch_context) = batch.context {
+                        merge(&mut context, &batch_context);
+                    }
+                    Some(context)
+                };
                 rudderanalytics::message::Message::Batch(rudderanalytics::message::Batch {
                     batch: batch
                         .batch
