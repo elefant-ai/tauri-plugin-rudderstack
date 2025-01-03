@@ -118,7 +118,7 @@ impl RudderWrapper {
             serde_json::Value::Object(context.clone())
         };
         let msg = match msg {
-            rudderanalytics::message::Message::Identify(mut identify) => {
+            rudderanalytics::message::Message::Identify(identify) => {
                 let context = {
                     let mut context = context.clone();
                     if let Some(identify_context) = identify.context {
