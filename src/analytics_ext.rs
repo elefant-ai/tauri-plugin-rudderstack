@@ -94,7 +94,7 @@ impl<R: Runtime> AnalyticsExt<R> for tauri::AppHandle<R> {
         &self,
         event: types::Message,
     ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>> {
-        tracing::trace!("sending analytics event: {:?}", event);
+        tracing::trace!(event = ?event, "sending analytics event");
         tracing::debug!("sending analytics event");
         let message = types::convert_message(event);
         let rudder = self.state::<RudderWrapper>();
