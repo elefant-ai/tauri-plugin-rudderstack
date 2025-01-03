@@ -76,11 +76,17 @@ pub trait AnalyticsExt<R: Runtime> {
     /// It will overwrite the previous user ID.
     fn set_user_id(&self, id: Option<String>);
 
-    /// Set the OS of the user. This will be used in all subsequent events.
-    fn set_os(&self, os: Option<String>);
+    /// Add to context hash map
+    fn add_to_context(&self, key: String, value: serde_json::Value) -> Option<serde_json::Value>;
 
-    /// Set the app version of the user. This will be used in all subsequent events.
-    fn set_app_version(&self, app_version: Option<String>);
+    /// Remove from context hash map
+    fn remove_from_context(&self, key: &str) -> Option<serde_json::Value>;
+
+    /// Clear the context hash map
+    fn clear_context(&self);
+
+    /// Get the context hash map
+    fn get_context(&self) -> std::collections::HashMap<String, serde_json::Value>;
 }
 
 impl<R: Runtime> AnalyticsExt<R> for tauri::AppHandle<R> {
@@ -108,15 +114,61 @@ impl<R: Runtime> AnalyticsExt<R> for tauri::AppHandle<R> {
         rudder.set_user_id(id.clone());
     }
 
-    fn set_os(&self, os: Option<String>) {
-        tracing::debug!("setting os: {:?}", os);
+    fn add_to_context(&self, key: String, value: serde_json::Value) -> Option<serde_json::Value> {
+        tracing::debug!("adding to context: {:?} -> {:?}", key, value);
         let rudder = self.state::<RudderWrapper>();
-        rudder.set_os(os);
+        rudder.add_to_context(key, value)
     }
 
-    fn set_app_version(&self, app_version: Option<String>) {
-        tracing::debug!("setting app version: {:?}", app_version);
+    fn remove_from_context(&self, key: &str) -> Option<serde_json::Value> {
+        tracing::debug!("removing from context: {:?}", key);
         let rudder = self.state::<RudderWrapper>();
-        rudder.set_app_version(app_version);
+        rudder.remove_from_context(key)
+    }
+
+    fn clear_context(&self) {
+        tracing::debug!("clearing context");
+        let rudder = self.state::<RudderWrapper>();
+        rudder.clear_context();
+    }
+
+    fn get_context(&self) -> std::collections::HashMap<String, serde_json::Value> {
+        tracing::debug!("getting context");
+        let rudder = self.state::<RudderWrapper>();
+        rudder.get_context()
+    }
+}
+
+
+impl<R: Runtime> AnalyticsExt<R> for tauri::App<R> {
+    fn send_analytic(
+        &self,
+        event: types::Message,
+    ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>> {
+        self.handle().send_analytic(event)
+    }
+
+    fn set_anonymous_id(&self, id: String) -> Result<(), config::ClientIdError> {
+        self.handle().set_anonymous_id(id)
+    }
+
+    fn set_user_id(&self, id: Option<String>) {
+        self.handle().set_user_id(id)
+    }
+
+    fn add_to_context(&self, key: String, value: serde_json::Value) -> Option<serde_json::Value> {
+        self.handle().add_to_context(key, value)
+    }
+
+    fn remove_from_context(&self, key: &str) -> Option<serde_json::Value> {
+        self.handle().remove_from_context(key)
+    }
+
+    fn clear_context(&self) {
+        self.handle().clear_context()
+    }
+
+    fn get_context(&self) -> std::collections::HashMap<String, serde_json::Value> {
+        self.handle().get_context()
     }
 }

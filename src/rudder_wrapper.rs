@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex};
+use std::{collections::HashMap, sync::{Arc, Mutex}};
 
 use rudderanalytics::client::RudderAnalytics;
 use tauri::Runtime;
@@ -8,6 +8,7 @@ use crate::config::{self, Config};
 pub struct RudderWrapper {
     rudder: Arc<RudderAnalytics>,
     config: Mutex<config::Config>,
+    context: Mutex<HashMap<String, serde_json::Value>>,
 }
 
 impl RudderWrapper {
@@ -17,6 +18,7 @@ impl RudderWrapper {
         Self {
             rudder,
             config: Mutex::new(config),
+            context: Mutex::new(HashMap::new()),
         }
     }
 
@@ -28,6 +30,24 @@ impl RudderWrapper {
     pub fn save<R: Runtime>(&self, app: &tauri::AppHandle<R>) -> Result<(), config::ClientIdError> {
         let config = self.config.lock().unwrap();
         config.save(app)
+    }
+
+    pub(crate) fn add_to_context(&self, key: String, value: serde_json::Value) -> Option<serde_json::Value> {
+        let mut context = self.context.lock().unwrap();
+        context.insert(key, value)
+    }
+
+    pub(crate) fn remove_from_context(&self, key: &str) -> Option<serde_json::Value> {
+        let mut context = self.context.lock().unwrap();
+        context.remove(key)
+    }
+
+    pub(crate) fn get_context(&self) -> HashMap<String, serde_json::Value> {
+        self.context.lock().unwrap().clone()
+    }
+
+    pub(crate) fn clear_context(&self) {
+        self.context.lock().unwrap().clear();
     }
 
     /// Set the anonymous id for this client
@@ -58,12 +78,6 @@ impl RudderWrapper {
         }
     }
 
-    /// Set the app version for this client
-    /// This will be used in all subsequent events
-    pub(crate) fn set_app_version(&self, app_version: Option<String>) {
-        self.config.lock().unwrap().set_app_version(app_version);
-    }
-
     /// Function that will receive user event data
     /// and after validation
     /// modify it to Ruddermessage format and send the event to data plane url \
@@ -83,17 +97,10 @@ impl RudderWrapper {
                 .user_id()
                 .map(|id| id.to_string())
         };
-        let app_version = {
-            self.config
-                .lock()
-                .unwrap()
-                .get_app_version()
-                .map(|app_version| app_version.to_string())
+        let context = {
+            let context = self.get_context();
+            serde_json::to_value(&*context).ok()
         };
-        let context: Option<serde_json::Value> = Some(serde_json::json!({
-            "os": std::env::consts::OS,
-            "app_version": app_version
-        }));
         let msg = match msg {
             rudderanalytics::message::Message::Identify(identify) => {
                 rudderanalytics::message::Message::Identify(rudderanalytics::message::Identify {
