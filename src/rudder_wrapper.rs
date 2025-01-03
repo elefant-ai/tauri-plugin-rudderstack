@@ -98,7 +98,7 @@ impl RudderWrapper {
                 .map(|id| id.to_string())
         };
         let context = {
-            let context = self.get_context();
+            let context = self.context.lock().unwrap();
             serde_json::to_value(&*context).ok()
         };
         let msg = match msg {
