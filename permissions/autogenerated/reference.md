@@ -9,6 +9,8 @@ All operations are enabled by default.
 
 
 
+#### This default permission set includes the following:
+
 - `allow-send-analytics-alias`
 - `allow-send-analytics-group`
 - `allow-send-analytics-identify`

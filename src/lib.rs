@@ -1,6 +1,8 @@
 #![doc = include_str!("../README.md")]
 
 pub use analytics_ext::AnalyticsExt;
+pub use rudder_wrapper::RateLimiterFn;
+pub use rate_limiters::PerEventCap;
 use rudder_wrapper::RudderWrapper;
 use tauri::{
     plugin::{Builder, TauriPlugin},
@@ -14,6 +16,7 @@ mod commands;
 mod config;
 mod rudder_wrapper;
 pub mod types;
+pub mod rate_limiters;
 
 const PLUGIN_NAME: &str = "rudderstack";
 

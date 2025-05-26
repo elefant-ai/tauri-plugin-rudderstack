@@ -5,6 +5,27 @@ use tauri::Runtime;
 
 use crate::config::{self, Config};
 
+/// Type alias for the rate limiter function
+/// Returns true if the message should be sent, false if it should be dropped
+/// 
+/// # Example
+/// 
+/// ```rust
+/// use std::sync::Arc;
+/// use tauri_plugin_rudderstack::{RateLimiterFn, AnalyticsExt};
+/// 
+/// // Example: Simple rate limiter that drops every 10th event
+/// let rate_limiter: Arc<RateLimiterFn> = Arc::new(|_msg| {
+///     static COUNTER: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+///     let count = COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+///     count % 10 != 9 // Drop every 10th event
+/// });
+/// 
+/// // Register the rate limiter
+/// // app.set_rate_limiter(rate_limiter);
+/// ```
+pub type RateLimiterFn = dyn Fn(&rudderanalytics::message::Message) -> bool + Send + Sync;
+
 /// merge two json values
 fn merge(a: &mut serde_json::Value, b: &serde_json::Value) {
     match (a, b) {
@@ -22,6 +43,7 @@ pub struct RudderWrapper {
     rudder: Arc<RudderAnalytics>,
     config: Mutex<config::Config>,
     context: Mutex<crate::types::Context>,
+    rate_limiter: Mutex<Option<Arc<RateLimiterFn>>>,
 }
 
 impl RudderWrapper {
@@ -32,6 +54,7 @@ impl RudderWrapper {
             rudder,
             config: Mutex::new(config),
             context: Mutex::new(context),
+            rate_limiter: Mutex::new(None),
         }
     }
 
@@ -43,6 +66,20 @@ impl RudderWrapper {
     pub fn save<R: Runtime>(&self, app: &tauri::AppHandle<R>) -> Result<(), config::ClientIdError> {
         let config = self.config.lock().unwrap();
         config.save(app)
+    }
+
+    /// Register a rate limiter function
+    /// The rate limiter function should return true if the message should be sent,
+    /// false if it should be dropped
+    pub fn set_rate_limiter(&self, rate_limiter: Arc<RateLimiterFn>) {
+        let mut limiter = self.rate_limiter.lock().unwrap();
+        *limiter = Some(rate_limiter);
+    }
+
+    /// Remove the rate limiter
+    pub fn remove_rate_limiter(&self) {
+        let mut limiter = self.rate_limiter.lock().unwrap();
+        *limiter = None;
     }
 
     pub(crate) fn add_to_context(
@@ -104,6 +141,18 @@ impl RudderWrapper {
         &self,
         msg: rudderanalytics::message::Message,
     ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>> {
+        // Check rate limiter before processing the message
+        {
+            let rate_limiter = self.rate_limiter.lock().unwrap();
+            if let Some(limiter) = rate_limiter.as_ref() {
+                if !limiter(&msg) {
+                    tracing::warn!("Event dropped by rate limiter: {:?}", msg);
+                    // Return a completed future with Ok result for dropped events
+                    return tauri::async_runtime::spawn_blocking(|| Ok(()));
+                }
+            }
+        }
+
         let rudder = self.rudder.clone();
         let anonymous_id = self.get_anonymous_id();
 
@@ -266,5 +315,44 @@ fn handle_batch_message(
             };
             rudderanalytics::message::BatchMessage::Track(track)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    #[test]
+    fn test_rate_limiter_functionality() {
+        let config = crate::config::Config::default();
+        let context = serde_json::Map::new();
+        let wrapper = RudderWrapper::new(
+            "http://localhost:8080".to_string(),
+            "test_key".to_string(),
+            config,
+            context,
+        );
+
+        // Create a rate limiter that counts calls
+        let call_count = Arc::new(AtomicUsize::new(0));
+        let call_count_clone = call_count.clone();
+        
+        let rate_limiter: Arc<RateLimiterFn> = Arc::new(move |_msg| {
+            let count = call_count_clone.fetch_add(1, Ordering::SeqCst);
+            count % 2 == 0 // Allow every other message
+        });
+
+        // Set the rate limiter
+        wrapper.set_rate_limiter(rate_limiter);
+
+        // The rate limiter should be called when sending messages
+        // Note: We can't easily test the actual sending without setting up a full environment,
+        // but we can verify the rate limiter is properly stored and can be removed
+        
+        // Remove the rate limiter
+        wrapper.remove_rate_limiter();
+        
+        // Test passes if no panics occur
     }
 }

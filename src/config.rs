@@ -69,13 +69,6 @@ impl Config {
         Ok(std::fs::write(&path, config)?)
     }
 
-    /// Load the config from a file.
-    pub fn load<R: Runtime>(handle: &AppHandle<R>) -> Self {
-        debug!("loading config");
-
-        Self::try_load(handle).unwrap_or_default()
-    }
-
     pub(crate) fn try_load<R: Runtime>(handle: &AppHandle<R>) -> Result<Self, ClientIdError> {
         let path = Self::get_path(handle)?;
         let config = std::fs::read(&path)?;

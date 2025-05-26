@@ -1,8 +1,9 @@
 use tauri::{Manager as _, Runtime};
+use std::sync::Arc;
 
 use crate::{
     config,
-    rudder_wrapper::RudderWrapper,
+    rudder_wrapper::{RudderWrapper, RateLimiterFn},
     types::{self, Alias, Group, Identify, Page, Screen, Track},
 };
 
@@ -87,6 +88,14 @@ pub trait AnalyticsExt<R: Runtime> {
 
     /// Get the context hash map
     fn get_context(&self) -> crate::types::Context;
+
+    /// Register a rate limiter function
+    /// The rate limiter function should return true if the message should be sent,
+    /// false if it should be dropped
+    fn set_rate_limiter(&self, rate_limiter: Arc<RateLimiterFn>);
+
+    /// Remove the rate limiter
+    fn remove_rate_limiter(&self);
 }
 
 impl<R: Runtime> AnalyticsExt<R> for tauri::AppHandle<R> {
@@ -137,8 +146,19 @@ impl<R: Runtime> AnalyticsExt<R> for tauri::AppHandle<R> {
         let rudder = self.state::<RudderWrapper>();
         rudder.get_context()
     }
-}
 
+    fn set_rate_limiter(&self, rate_limiter: Arc<RateLimiterFn>) {
+        tracing::debug!("setting rate limiter");
+        let rudder = self.state::<RudderWrapper>();
+        rudder.set_rate_limiter(rate_limiter);
+    }
+
+    fn remove_rate_limiter(&self) {
+        tracing::debug!("removing rate limiter");
+        let rudder = self.state::<RudderWrapper>();
+        rudder.remove_rate_limiter();
+    }
+}
 
 impl<R: Runtime> AnalyticsExt<R> for tauri::App<R> {
     fn send_analytic(
@@ -170,5 +190,13 @@ impl<R: Runtime> AnalyticsExt<R> for tauri::App<R> {
 
     fn get_context(&self) -> crate::types::Context {
         self.handle().get_context()
+    }
+
+    fn set_rate_limiter(&self, rate_limiter: Arc<RateLimiterFn>) {
+        self.handle().set_rate_limiter(rate_limiter)
+    }
+
+    fn remove_rate_limiter(&self) {
+        self.handle().remove_rate_limiter()
     }
 }
