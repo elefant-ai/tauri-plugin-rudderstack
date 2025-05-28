@@ -40,10 +40,9 @@ impl EventCounter {
     }
 
     fn reset_if_expired(&mut self) {
-        let now = Instant::now();
-        if now.duration_since(self.window_start) >= Duration::from_secs(60) {
+        if self.window_start.elapsed() >= Duration::from_secs(60) {
             self.count = 0;
-            self.window_start = now;
+            self.window_start = Instant::now();
         }
     }
 
@@ -71,7 +70,7 @@ impl PerEventCap {
     /// Check if an event should be allowed based on the rate limit
     /// Returns true if the event should be sent, false if it should be dropped
     pub fn should_allow(&self, message: &rudderanalytics::message::Message) -> bool {
-        let event_type = self.extract_event_type(message);
+        let event_type = self.extract_event_type(message).to_string();
         
         // Use entry API to get or insert a new counter
         let mut counter = self.event_counters.entry(event_type).or_insert_with(EventCounter::new);
@@ -124,6 +123,12 @@ impl PerEventCap {
     /// Reset all counters
     pub fn reset(&self) {
         self.event_counters.clear();
+    }
+}
+
+impl crate::rudder_wrapper::RateLimiter for PerEventCap {
+    fn let_pass(&self, msg: &rudderanalytics::message::Message) -> bool {
+        self.should_allow(msg)
     }
 }
 

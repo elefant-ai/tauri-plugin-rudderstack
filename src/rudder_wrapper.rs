@@ -5,26 +5,36 @@ use tauri::Runtime;
 
 use crate::config::{self, Config};
 
-/// Type alias for the rate limiter function
-/// Returns true if the message should be sent, false if it should be dropped
+/// Trait for rate limiting analytics messages
 /// 
 /// # Example
 /// 
 /// ```rust
-/// use std::sync::Arc;
-/// use tauri_plugin_rudderstack::{RateLimiterFn, AnalyticsExt};
+/// use tauri_plugin_rudderstack::RateLimiter;
 /// 
-/// // Example: Simple rate limiter that drops every 10th event
-/// let rate_limiter: Arc<RateLimiterFn> = Arc::new(|_msg| {
-///     static COUNTER: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-///     let count = COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-///     count % 10 != 9 // Drop every 10th event
-/// });
+/// struct SimpleRateLimiter {
+///     counter: std::sync::atomic::AtomicUsize,
+/// }
 /// 
-/// // Register the rate limiter
-/// // app.set_rate_limiter(rate_limiter);
+/// impl RateLimiter for SimpleRateLimiter {
+///     fn let_pass(&self, _msg: &rudderanalytics::message::Message) -> bool {
+///         let count = self.counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+///         count % 10 != 9 // Drop every 10th event
+///     }
+/// }
 /// ```
-pub type RateLimiterFn = dyn Fn(&rudderanalytics::message::Message) -> bool + Send + Sync;
+pub trait RateLimiter: Send + Sync {
+    fn let_pass(&self, msg: &rudderanalytics::message::Message) -> bool;
+}
+
+impl<T> RateLimiter for T
+where
+    T: Fn(&rudderanalytics::message::Message) -> bool + Send + Sync,
+{
+    fn let_pass(&self, msg: &rudderanalytics::message::Message) -> bool {
+        self(msg)
+    }
+}
 
 /// merge two json values
 fn merge(a: &mut serde_json::Value, b: &serde_json::Value) {
@@ -43,7 +53,7 @@ pub struct RudderWrapper {
     rudder: Arc<RudderAnalytics>,
     config: Mutex<config::Config>,
     context: Mutex<crate::types::Context>,
-    rate_limiter: Mutex<Option<Arc<RateLimiterFn>>>,
+    rate_limiter: Mutex<Option<Box<dyn RateLimiter>>>,
 }
 
 impl RudderWrapper {
@@ -71,7 +81,7 @@ impl RudderWrapper {
     /// Register a rate limiter function
     /// The rate limiter function should return true if the message should be sent,
     /// false if it should be dropped
-    pub fn set_rate_limiter(&self, rate_limiter: Arc<RateLimiterFn>) {
+    pub fn set_rate_limiter(&self, rate_limiter: Box<dyn RateLimiter>) {
         let mut limiter = self.rate_limiter.lock().unwrap();
         *limiter = Some(rate_limiter);
     }
@@ -145,9 +155,10 @@ impl RudderWrapper {
         {
             let rate_limiter = self.rate_limiter.lock().unwrap();
             if let Some(limiter) = rate_limiter.as_ref() {
-                if !limiter(&msg) {
+                if !limiter.let_pass(&msg) {
                     tracing::warn!("Event dropped by rate limiter: {:?}", msg);
-                    // Return a completed future with Ok result for dropped events
+                    // Return a completed future with Ok(()) for dropped events
+                    // Rate limiting should be transparent to the API consumer
                     return tauri::async_runtime::spawn_blocking(|| Ok(()));
                 }
             }
@@ -323,6 +334,17 @@ mod tests {
     use super::*;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
+    struct TestRateLimiter {
+        call_count: Arc<AtomicUsize>,
+    }
+
+    impl RateLimiter for TestRateLimiter {
+        fn let_pass(&self, _msg: &rudderanalytics::message::Message) -> bool {
+            let count = self.call_count.fetch_add(1, Ordering::SeqCst);
+            count % 2 == 0 // Allow every other message
+        }
+    }
+
     #[test]
     fn test_rate_limiter_functionality() {
         let config = crate::config::Config::default();
@@ -336,15 +358,12 @@ mod tests {
 
         // Create a rate limiter that counts calls
         let call_count = Arc::new(AtomicUsize::new(0));
-        let call_count_clone = call_count.clone();
-        
-        let rate_limiter: Arc<RateLimiterFn> = Arc::new(move |_msg| {
-            let count = call_count_clone.fetch_add(1, Ordering::SeqCst);
-            count % 2 == 0 // Allow every other message
-        });
+        let rate_limiter = TestRateLimiter {
+            call_count: call_count.clone(),
+        };
 
         // Set the rate limiter
-        wrapper.set_rate_limiter(rate_limiter);
+        wrapper.set_rate_limiter(Box::new(rate_limiter));
 
         // The rate limiter should be called when sending messages
         // Note: We can't easily test the actual sending without setting up a full environment,

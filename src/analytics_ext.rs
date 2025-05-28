@@ -1,9 +1,8 @@
 use tauri::{Manager as _, Runtime};
-use std::sync::Arc;
 
 use crate::{
     config,
-    rudder_wrapper::{RudderWrapper, RateLimiterFn},
+    rudder_wrapper::{RudderWrapper, RateLimiter},
     types::{self, Alias, Group, Identify, Page, Screen, Track},
 };
 
@@ -92,7 +91,7 @@ pub trait AnalyticsExt<R: Runtime> {
     /// Register a rate limiter function
     /// The rate limiter function should return true if the message should be sent,
     /// false if it should be dropped
-    fn set_rate_limiter(&self, rate_limiter: Arc<RateLimiterFn>);
+    fn set_rate_limiter(&self, rate_limiter: impl RateLimiter + 'static);
 
     /// Remove the rate limiter
     fn remove_rate_limiter(&self);
@@ -147,10 +146,10 @@ impl<R: Runtime> AnalyticsExt<R> for tauri::AppHandle<R> {
         rudder.get_context()
     }
 
-    fn set_rate_limiter(&self, rate_limiter: Arc<RateLimiterFn>) {
+    fn set_rate_limiter(&self, rate_limiter: impl RateLimiter + 'static) {
         tracing::debug!("setting rate limiter");
         let rudder = self.state::<RudderWrapper>();
-        rudder.set_rate_limiter(rate_limiter);
+        rudder.set_rate_limiter(Box::new(rate_limiter));
     }
 
     fn remove_rate_limiter(&self) {
@@ -192,11 +191,52 @@ impl<R: Runtime> AnalyticsExt<R> for tauri::App<R> {
         self.handle().get_context()
     }
 
-    fn set_rate_limiter(&self, rate_limiter: Arc<RateLimiterFn>) {
+    fn set_rate_limiter(&self, rate_limiter: impl RateLimiter + 'static) {
         self.handle().set_rate_limiter(rate_limiter)
     }
 
     fn remove_rate_limiter(&self) {
         self.handle().remove_rate_limiter()
+    }
+}
+
+impl<R: Runtime> AnalyticsExt<R> for tauri::Window<R> {
+    fn send_analytic(
+        &self,
+        event: types::Message,
+    ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>> {
+        self.app_handle().send_analytic(event)
+    }
+
+    fn set_anonymous_id(&self, id: String) -> Result<(), config::ClientIdError> {
+        self.app_handle().set_anonymous_id(id)
+    }
+
+    fn set_user_id(&self, id: Option<String>) {
+        self.app_handle().set_user_id(id)
+    }
+
+    fn add_to_context(&self, key: String, value: serde_json::Value) -> Option<serde_json::Value> {
+        self.app_handle().add_to_context(key, value)
+    }
+
+    fn remove_from_context(&self, key: &str) -> Option<serde_json::Value> {
+        self.app_handle().remove_from_context(key)
+    }
+
+    fn clear_context(&self) {
+        self.app_handle().clear_context()
+    }
+
+    fn get_context(&self) -> crate::types::Context {
+        self.app_handle().get_context()
+    }
+
+    fn set_rate_limiter(&self, rate_limiter: impl RateLimiter + 'static) {
+        self.app_handle().set_rate_limiter(rate_limiter)
+    }
+
+    fn remove_rate_limiter(&self) {
+        self.app_handle().remove_rate_limiter()
     }
 }

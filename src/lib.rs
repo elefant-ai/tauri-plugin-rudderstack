@@ -1,7 +1,7 @@
 #![doc = include_str!("../README.md")]
 
 pub use analytics_ext::AnalyticsExt;
-pub use rudder_wrapper::RateLimiterFn;
+pub use rudder_wrapper::RateLimiter;
 pub use rate_limiters::PerEventCap;
 use rudder_wrapper::RudderWrapper;
 use tauri::{
