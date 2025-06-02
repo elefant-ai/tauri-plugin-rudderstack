@@ -1,7 +1,7 @@
-use tauri_plugin_rudderstack::{RateLimiter, PerEventCap};
+use tauri_plugin_rudderstack::{PerEventCap, RateLimiter};
 
 /// Example showing how to use the rate limiter functionality
-/// 
+///
 /// This example demonstrates:
 /// 1. Basic rate limiter using a custom struct
 /// 2. PerEventCap rate limiter for limiting events per minute by event type
@@ -28,7 +28,7 @@ impl RateLimiter for SelectiveRateLimiter {
             }
             rudderanalytics::message::Message::Identify(_) => {
                 // Limit identify events to every other one
-                static IDENTIFY_COUNTER: std::sync::atomic::AtomicUsize = 
+                static IDENTIFY_COUNTER: std::sync::atomic::AtomicUsize =
                     std::sync::atomic::AtomicUsize::new(0);
                 let count = IDENTIFY_COUNTER.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
                 count % 2 == 0
@@ -70,21 +70,20 @@ mod tests {
     #[test]
     fn test_per_event_cap_example() {
         let per_event_cap = PerEventCap::new(2);
-        
-        let track_message = rudderanalytics::message::Message::Track(
-            rudderanalytics::message::Track {
+
+        let track_message =
+            rudderanalytics::message::Message::Track(rudderanalytics::message::Track {
                 event: "test_event".to_string(),
                 ..Default::default()
-            }
-        );
+            });
 
         // First two should pass
         assert!(per_event_cap.let_pass(&track_message));
         assert!(per_event_cap.let_pass(&track_message));
-        
+
         // Third should be blocked
         assert!(!per_event_cap.let_pass(&track_message));
-        
+
         // Check stats
         let stats = per_event_cap.get_stats();
         assert_eq!(stats.get("test_event"), Some(&2));
@@ -94,19 +93,17 @@ mod tests {
     fn test_selective_rate_limiter() {
         let selective_rate_limiter = SelectiveRateLimiter;
 
-        let good_track = rudderanalytics::message::Message::Track(
-            rudderanalytics::message::Track {
+        let good_track =
+            rudderanalytics::message::Message::Track(rudderanalytics::message::Track {
                 event: "good_event".to_string(),
                 ..Default::default()
-            }
-        );
+            });
 
-        let spam_track = rudderanalytics::message::Message::Track(
-            rudderanalytics::message::Track {
+        let spam_track =
+            rudderanalytics::message::Message::Track(rudderanalytics::message::Track {
                 event: "spam_event".to_string(),
                 ..Default::default()
-            }
-        );
+            });
 
         assert!(selective_rate_limiter.let_pass(&good_track));
         assert!(!selective_rate_limiter.let_pass(&spam_track));
@@ -115,18 +112,17 @@ mod tests {
     #[test]
     fn test_basic_rate_limiter() {
         let basic_rate_limiter = BasicRateLimiter;
-        
-        let track_message = rudderanalytics::message::Message::Track(
-            rudderanalytics::message::Track {
+
+        let track_message =
+            rudderanalytics::message::Message::Track(rudderanalytics::message::Track {
                 event: "test_event".to_string(),
                 ..Default::default()
-            }
-        );
+            });
 
         // Test that it follows the pattern (allow 9, drop 1, repeat)
         let mut allowed_count = 0;
         let mut dropped_count = 0;
-        
+
         for _ in 0..20 {
             if basic_rate_limiter.let_pass(&track_message) {
                 allowed_count += 1;
@@ -134,9 +130,9 @@ mod tests {
                 dropped_count += 1;
             }
         }
-        
+
         // Should drop approximately 1 in 10 events
         assert!(dropped_count > 0);
         assert!(allowed_count > dropped_count);
     }
-} 
+}

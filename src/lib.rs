@@ -1,8 +1,8 @@
 #![doc = include_str!("../README.md")]
 
 pub use analytics_ext::AnalyticsExt;
-pub use rudder_wrapper::RateLimiter;
 pub use rate_limiters::PerEventCap;
+pub use rudder_wrapper::RateLimiter;
 use rudder_wrapper::RudderWrapper;
 use tauri::{
     plugin::{Builder, TauriPlugin},
@@ -14,9 +14,9 @@ use types::Track;
 mod analytics_ext;
 mod commands;
 mod config;
+pub mod rate_limiters;
 mod rudder_wrapper;
 pub mod types;
-pub mod rate_limiters;
 
 const PLUGIN_NAME: &str = "rudderstack";
 
@@ -102,7 +102,8 @@ impl RudderStackBuilder {
                 if let Err(err) = config.save(app) {
                     error!("Failed to save config: {:?}", err);
                 }
-                let rudder_analytics = RudderWrapper::new(self.data_plane, self.key, config, self.context);
+                let rudder_analytics =
+                    RudderWrapper::new(self.data_plane, self.key, config, self.context);
 
                 app.manage(rudder_analytics);
 

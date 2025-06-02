@@ -275,7 +275,9 @@ impl RudderWrapper {
                 })
             }
         };
-        SendResult::ThreadHandle(tauri::async_runtime::spawn_blocking(move || rudder.send(&msg)))
+        SendResult::ThreadHandle(tauri::async_runtime::spawn_blocking(move || {
+            rudder.send(&msg)
+        }))
     }
 }
 
