@@ -6,19 +6,30 @@ use crate::{
     types::{self, Alias, Group, Identify, Page, Screen, Track},
 };
 
+
+/// The result of sending an analytics event.
+pub enum SendResult {
+    /// the event was dropped by the rate limiter
+    EventDropped,
+    /// Thread handle
+    ThreadHandle(tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>>),
+}
+
+
+
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the analytics APIs.
 pub trait AnalyticsExt<R: Runtime> {
     /// Send an analytics event to the RudderStack data plane.
     fn send_analytic(
         &self,
         event: types::Message,
-    ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>>;
+    ) -> SendResult;
 
     /// Send an [Identify] event to the RudderStack data plane.
     fn send_analytic_identify(
         &self,
         event: Identify,
-    ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>> {
+    ) -> SendResult {
         let event = types::Message::Identify(event);
         self.send_analytic(event)
     }
@@ -27,7 +38,7 @@ pub trait AnalyticsExt<R: Runtime> {
     fn send_analytic_track(
         &self,
         event: Track,
-    ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>> {
+    ) -> SendResult {
         let event = types::Message::Track(event);
         self.send_analytic(event)
     }
@@ -36,7 +47,7 @@ pub trait AnalyticsExt<R: Runtime> {
     fn send_analytic_page(
         &self,
         event: Page,
-    ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>> {
+    ) -> SendResult {
         let event = types::Message::Page(event);
         self.send_analytic(event)
     }
@@ -45,7 +56,7 @@ pub trait AnalyticsExt<R: Runtime> {
     fn send_analytic_screen(
         &self,
         event: Screen,
-    ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>> {
+    ) -> SendResult {
         let event = types::Message::Screen(event);
         self.send_analytic(event)
     }
@@ -54,7 +65,7 @@ pub trait AnalyticsExt<R: Runtime> {
     fn send_analytic_group(
         &self,
         event: Group,
-    ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>> {
+    ) -> SendResult {
         let event = types::Message::Group(event);
         self.send_analytic(event)
     }
@@ -63,7 +74,7 @@ pub trait AnalyticsExt<R: Runtime> {
     fn send_analytic_alias(
         &self,
         event: Alias,
-    ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>> {
+    ) -> SendResult {
         let event = types::Message::Alias(event);
         self.send_analytic(event)
     }
@@ -101,7 +112,7 @@ impl<R: Runtime> AnalyticsExt<R> for tauri::AppHandle<R> {
     fn send_analytic(
         &self,
         event: types::Message,
-    ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>> {
+    ) -> SendResult {
         tracing::trace!(event = ?event, "sending analytics event");
         tracing::debug!("sending analytics event");
         let message = types::convert_message(event);
@@ -163,7 +174,7 @@ impl<R: Runtime> AnalyticsExt<R> for tauri::App<R> {
     fn send_analytic(
         &self,
         event: types::Message,
-    ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>> {
+    ) -> SendResult {
         self.handle().send_analytic(event)
     }
 
@@ -204,7 +215,7 @@ impl<R: Runtime> AnalyticsExt<R> for tauri::Window<R> {
     fn send_analytic(
         &self,
         event: types::Message,
-    ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>> {
+    ) -> SendResult {
         self.app_handle().send_analytic(event)
     }
 
