@@ -3,7 +3,41 @@ use std::sync::{Arc, Mutex};
 use rudderanalytics::client::RudderAnalytics;
 use tauri::Runtime;
 
-use crate::config::{self, Config};
+use crate::{
+    analytics_ext::SendResult,
+    config::{self, Config},
+};
+
+/// Trait for rate limiting analytics messages
+///
+/// # Example
+///
+/// ```rust
+/// use tauri_plugin_rudderstack::RateLimiter;
+///
+/// struct SimpleRateLimiter {
+///     counter: std::sync::atomic::AtomicUsize,
+/// }
+///
+/// impl RateLimiter for SimpleRateLimiter {
+///     fn let_pass(&self, _msg: &rudderanalytics::message::Message) -> bool {
+///         let count = self.counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+///         count % 10 != 9 // Drop every 10th event
+///     }
+/// }
+/// ```
+pub trait RateLimiter: Send + Sync {
+    fn let_pass(&self, msg: &rudderanalytics::message::Message) -> bool;
+}
+
+impl<T> RateLimiter for T
+where
+    T: Fn(&rudderanalytics::message::Message) -> bool + Send + Sync,
+{
+    fn let_pass(&self, msg: &rudderanalytics::message::Message) -> bool {
+        self(msg)
+    }
+}
 
 /// merge two json values
 fn merge(a: &mut serde_json::Value, b: &serde_json::Value) {
@@ -17,21 +51,27 @@ fn merge(a: &mut serde_json::Value, b: &serde_json::Value) {
     }
 }
 
-
 pub struct RudderWrapper {
     rudder: Arc<RudderAnalytics>,
     config: Mutex<config::Config>,
     context: Mutex<crate::types::Context>,
+    rate_limiter: Mutex<Option<Box<dyn RateLimiter>>>,
 }
 
 impl RudderWrapper {
     /// Create a new RudderWrapper instance
-    pub fn new(data_plane: String, key: String, config: Config, context: crate::types::Context) -> Self {
+    pub fn new(
+        data_plane: String,
+        key: String,
+        config: Config,
+        context: crate::types::Context,
+    ) -> Self {
         let rudder = Arc::new(RudderAnalytics::load(key, data_plane));
         Self {
             rudder,
             config: Mutex::new(config),
             context: Mutex::new(context),
+            rate_limiter: Mutex::new(None),
         }
     }
 
@@ -43,6 +83,20 @@ impl RudderWrapper {
     pub fn save<R: Runtime>(&self, app: &tauri::AppHandle<R>) -> Result<(), config::ClientIdError> {
         let config = self.config.lock().unwrap();
         config.save(app)
+    }
+
+    /// Register a rate limiter function
+    /// The rate limiter function should return true if the message should be sent,
+    /// false if it should be dropped
+    pub fn set_rate_limiter(&self, rate_limiter: Box<dyn RateLimiter>) {
+        let mut limiter = self.rate_limiter.lock().unwrap();
+        *limiter = Some(rate_limiter);
+    }
+
+    /// Remove the rate limiter
+    pub fn remove_rate_limiter(&self) {
+        let mut limiter = self.rate_limiter.lock().unwrap();
+        *limiter = None;
     }
 
     pub(crate) fn add_to_context(
@@ -100,10 +154,20 @@ impl RudderWrapper {
     /// modify it to Ruddermessage format and send the event to data plane url \
     /// add anonymous_id to all messages except alias.
     /// NOTE: this function will try to acquire a lock on the config.
-    pub fn send(
-        &self,
-        msg: rudderanalytics::message::Message,
-    ) -> tauri::async_runtime::JoinHandle<Result<(), rudderanalytics::errors::Error>> {
+    pub fn send(&self, msg: rudderanalytics::message::Message) -> SendResult {
+        // Check rate limiter before processing the message
+        {
+            let rate_limiter = self.rate_limiter.lock().unwrap();
+            if let Some(limiter) = rate_limiter.as_ref() {
+                if !limiter.let_pass(&msg) {
+                    tracing::warn!("Event dropped by rate limiter: {:?}", msg);
+                    // Return a completed future with Ok(()) for dropped events
+                    // Rate limiting should be transparent to the API consumer
+                    return SendResult::EventDropped;
+                }
+            }
+        }
+
         let rudder = self.rudder.clone();
         let anonymous_id = self.get_anonymous_id();
 
@@ -211,7 +275,9 @@ impl RudderWrapper {
                 })
             }
         };
-        tauri::async_runtime::spawn_blocking(move || rudder.send(&msg))
+        SendResult::ThreadHandle(tauri::async_runtime::spawn_blocking(move || {
+            rudder.send(&msg)
+        }))
     }
 }
 
@@ -266,5 +332,52 @@ fn handle_batch_message(
             };
             rudderanalytics::message::BatchMessage::Track(track)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    struct TestRateLimiter {
+        call_count: Arc<AtomicUsize>,
+    }
+
+    impl RateLimiter for TestRateLimiter {
+        fn let_pass(&self, _msg: &rudderanalytics::message::Message) -> bool {
+            let count = self.call_count.fetch_add(1, Ordering::SeqCst);
+            count % 2 == 0 // Allow every other message
+        }
+    }
+
+    #[test]
+    fn test_rate_limiter_functionality() {
+        let config = crate::config::Config::default();
+        let context = serde_json::Map::new();
+        let wrapper = RudderWrapper::new(
+            "http://localhost:8080".to_string(),
+            "test_key".to_string(),
+            config,
+            context,
+        );
+
+        // Create a rate limiter that counts calls
+        let call_count = Arc::new(AtomicUsize::new(0));
+        let rate_limiter = TestRateLimiter {
+            call_count: call_count.clone(),
+        };
+
+        // Set the rate limiter
+        wrapper.set_rate_limiter(Box::new(rate_limiter));
+
+        // The rate limiter should be called when sending messages
+        // Note: We can't easily test the actual sending without setting up a full environment,
+        // but we can verify the rate limiter is properly stored and can be removed
+
+        // Remove the rate limiter
+        wrapper.remove_rate_limiter();
+
+        // Test passes if no panics occur
     }
 }

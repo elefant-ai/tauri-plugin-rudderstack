@@ -64,16 +64,21 @@ First you need to register the core plugin with Tauri:
 
 `src-tauri/src/main.rs`
 
-```rust
+```rust,no_run
+use tauri_plugin_rudderstack::RudderStackBuilder;
+
 fn main() {
     let data_plane = "https://<Your URL>.dataplane.rudderstack.com";
     let key = "<Your Write Key>";
-    let anonymous_id: Option<String> = None;
 
-    tauri::Builder::default()
-        .plugin(tauri_plugin_rudderstack::init(data_plane, key, anonymous_id))
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+    let _builder = tauri::Builder::default()
+        .plugin(
+            RudderStackBuilder::new(data_plane, key)
+                .build()
+        );
+        // In a real application, you would call:
+        // _builder.run(tauri::generate_context!())
+        //     .expect("error while running tauri application");
 }
 ```
 

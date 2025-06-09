@@ -49,7 +49,7 @@
           "minimum": 1.0
         },
         "description": {
-          "description": "Human-readable description of what the permission does. Tauri convention is to use <h4> headings in markdown content for Tauri documentation generation purposes.",
+          "description": "Human-readable description of what the permission does. Tauri convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
           "type": [
             "string",
             "null"
@@ -111,7 +111,7 @@
           "type": "string"
         },
         "description": {
-          "description": "Human-readable description of what the permission does. Tauri internal convention is to use <h4> headings in markdown content for Tauri documentation generation purposes.",
+          "description": "Human-readable description of what the permission does. Tauri internal convention is to use `<h4>` headings in markdown content for Tauri documentation generation purposes.",
           "type": [
             "string",
             "null"
@@ -297,67 +297,80 @@
         {
           "description": "Enables the send_analytics_alias command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-send-analytics-alias"
+          "const": "allow-send-analytics-alias",
+          "markdownDescription": "Enables the send_analytics_alias command without any pre-configured scope."
         },
         {
           "description": "Denies the send_analytics_alias command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-send-analytics-alias"
+          "const": "deny-send-analytics-alias",
+          "markdownDescription": "Denies the send_analytics_alias command without any pre-configured scope."
         },
         {
           "description": "Enables the send_analytics_group command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-send-analytics-group"
+          "const": "allow-send-analytics-group",
+          "markdownDescription": "Enables the send_analytics_group command without any pre-configured scope."
         },
         {
           "description": "Denies the send_analytics_group command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-send-analytics-group"
+          "const": "deny-send-analytics-group",
+          "markdownDescription": "Denies the send_analytics_group command without any pre-configured scope."
         },
         {
           "description": "Enables the send_analytics_identify command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-send-analytics-identify"
+          "const": "allow-send-analytics-identify",
+          "markdownDescription": "Enables the send_analytics_identify command without any pre-configured scope."
         },
         {
           "description": "Denies the send_analytics_identify command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-send-analytics-identify"
+          "const": "deny-send-analytics-identify",
+          "markdownDescription": "Denies the send_analytics_identify command without any pre-configured scope."
         },
         {
           "description": "Enables the send_analytics_page command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-send-analytics-page"
+          "const": "allow-send-analytics-page",
+          "markdownDescription": "Enables the send_analytics_page command without any pre-configured scope."
         },
         {
           "description": "Denies the send_analytics_page command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-send-analytics-page"
+          "const": "deny-send-analytics-page",
+          "markdownDescription": "Denies the send_analytics_page command without any pre-configured scope."
         },
         {
           "description": "Enables the send_analytics_screen command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-send-analytics-screen"
+          "const": "allow-send-analytics-screen",
+          "markdownDescription": "Enables the send_analytics_screen command without any pre-configured scope."
         },
         {
           "description": "Denies the send_analytics_screen command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-send-analytics-screen"
+          "const": "deny-send-analytics-screen",
+          "markdownDescription": "Denies the send_analytics_screen command without any pre-configured scope."
         },
         {
           "description": "Enables the send_analytics_track command without any pre-configured scope.",
           "type": "string",
-          "const": "allow-send-analytics-track"
+          "const": "allow-send-analytics-track",
+          "markdownDescription": "Enables the send_analytics_track command without any pre-configured scope."
         },
         {
           "description": "Denies the send_analytics_track command without any pre-configured scope.",
           "type": "string",
-          "const": "deny-send-analytics-track"
+          "const": "deny-send-analytics-track",
+          "markdownDescription": "Denies the send_analytics_track command without any pre-configured scope."
         },
         {
-          "description": "This permission set configures what kind of\noperations are available from the rudderstack plugin.\n\n#### Granted Permissions\n\nAll operations are enabled by default.\n\n",
+          "description": "This permission set configures what kind of\noperations are available from the rudderstack plugin.\n\n#### Granted Permissions\n\nAll operations are enabled by default.\n\n\n#### This default permission set includes:\n\n- `allow-send-analytics-alias`\n- `allow-send-analytics-group`\n- `allow-send-analytics-identify`\n- `allow-send-analytics-page`\n- `allow-send-analytics-screen`\n- `allow-send-analytics-track`",
           "type": "string",
-          "const": "default"
+          "const": "default",
+          "markdownDescription": "This permission set configures what kind of\noperations are available from the rudderstack plugin.\n\n#### Granted Permissions\n\nAll operations are enabled by default.\n\n\n#### This default permission set includes:\n\n- `allow-send-analytics-alias`\n- `allow-send-analytics-group`\n- `allow-send-analytics-identify`\n- `allow-send-analytics-page`\n- `allow-send-analytics-screen`\n- `allow-send-analytics-track`"
         }
       ]
     }
