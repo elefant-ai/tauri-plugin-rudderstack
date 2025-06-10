@@ -93,16 +93,10 @@ impl PerEventCap {
     /// Extract the event type from a RudderStack message
     fn extract_event_type<'a>(&self, message: &'a rudderanalytics::message::Message) -> &'a str {
         match message {
-            rudderanalytics::message::Message::Track(track) => {
-                &track.event
-            }
+            rudderanalytics::message::Message::Track(track) => &track.event,
             rudderanalytics::message::Message::Identify(_) => "identify",
-            rudderanalytics::message::Message::Page(page) => {
-                &page.name
-            }
-            rudderanalytics::message::Message::Screen(screen) => {
-                &screen.name
-            }
+            rudderanalytics::message::Message::Page(page) => &page.name,
+            rudderanalytics::message::Message::Screen(screen) => &screen.name,
             rudderanalytics::message::Message::Group(_) => "group",
             rudderanalytics::message::Message::Alias(_) => "alias",
             rudderanalytics::message::Message::Batch(_) => "batch",
